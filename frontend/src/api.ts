@@ -53,6 +53,12 @@ export interface AccuracyCoverage {
   halfHourActualTimeline: StatusCounts & { targets: number }
 }
 
+export interface DailyAccuracy {
+  decisionDate: string
+  deliveryDate: string
+  metrics: AccuracyMetrics
+}
+
 export interface DecisionAccuracy {
   decisionDate: string
   deliveryDate: string
@@ -69,6 +75,7 @@ export interface DecisionAccuracy {
     lastDecisionDate: string
     metrics: AccuracyMetrics
     coverage: AccuracyCoverage
+    days: DailyAccuracy[]
   }
 }
 
