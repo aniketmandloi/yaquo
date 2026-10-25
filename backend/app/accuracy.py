@@ -1,10 +1,38 @@
 import math
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
-from app.forecasts import classify, decision_forecast, utc_text
+from app.forecasts import (
+    classify,
+    decision_forecast,
+    london_midnight,
+    target_starts,
+    utc_text,
+)
 from app.snapshot import Observation
 
 ActualSelection = dict[datetime, tuple[datetime, list]]
+STATUSES = ("selected", "missing", "conflicting", "invalid")
+
+
+def status_counts(statuses: list[str]) -> dict:
+    return {status: statuses.count(status) for status in STATUSES}
+
+
+def select_actual(start: datetime, actuals: ActualSelection) -> tuple:
+    if start not in actuals:
+        return "missing", None, None
+    publish, generations = actuals[start]
+    status, value = classify(generations)
+    return status, value, utc_text(publish)
+
+
+def half_hour_timeline(delivery_date: date, actuals: ActualSelection) -> dict:
+    day_start = london_midnight(delivery_date)
+    day_end = london_midnight(delivery_date + timedelta(days=1))
+    grid = target_starts(day_start, day_end, timedelta(minutes=30))
+    starts = set(grid) | {s for s in actuals if day_start <= s < day_end}
+    statuses = [select_actual(start, actuals)[0] for start in starts]
+    return {"targets": len(grid), **status_counts(statuses)}
 
 
 def metrics(errors: list) -> dict:
@@ -21,12 +49,7 @@ def metrics(errors: list) -> dict:
 
 def pair(target: dict, actuals: ActualSelection) -> dict:
     start = datetime.fromisoformat(target["startTime"])
-    if start in actuals:
-        publish, generations = actuals[start]
-        actual_status, actual_value = classify(generations)
-        actual_publish = utc_text(publish)
-    else:
-        actual_status, actual_value, actual_publish = "missing", None, None
+    actual_status, actual_value, actual_publish = select_actual(start, actuals)
     matched = target["status"] == "selected" and actual_status == "selected"
     return {
         "startTime": target["startTime"],
@@ -52,5 +75,19 @@ def decision_accuracy(
         "cutoff": view["cutoff"],
         "timezone": view["timezone"],
         "unit": view["unit"],
-        "day": {"pairs": pairs, "metrics": metrics(errors)},
+        "day": {
+            "pairs": pairs,
+            "metrics": metrics(errors),
+            "coverage": {
+                "hourlyForecastTargets": view["quality"]["expectedHourlyTargets"],
+                "forecast": status_counts([p["forecastStatus"] for p in pairs]),
+                "actualAtHourlyTargets": status_counts(
+                    [p["actualStatus"] for p in pairs]
+                ),
+                "matchedPairs": len(errors),
+                "halfHourActualTimeline": half_hour_timeline(
+                    date.fromisoformat(view["deliveryDate"]), actuals
+                ),
+            },
+        },
     }

@@ -181,3 +181,41 @@ def test_valid_zero_error_is_a_zero_score(client_for):
         "bias": 0,
         "rmse": 0,
     }
+
+
+def test_coverage_separates_hourly_matches_from_half_hour_actual_timeline(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 1000),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 1100),
+            forecast("2026-01-16T02:00:00Z", "2026-01-15T07:30:00Z", None),
+        ],
+        [
+            actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 900),
+            actual("2026-01-16T00:30:00Z", "2026-01-16T01:00:00Z", 950),
+            actual("2026-01-16T01:00:00Z", "2026-01-16T01:30:00Z", 980),
+            actual("2026-01-16T03:00:00Z", "2026-01-16T03:30:00Z", 700),
+            actual("2026-01-16T03:00:00Z", "2026-01-16T03:30:00Z", 710),
+            actual("2026-01-17T00:00:00Z", "2026-01-17T00:30:00Z", 600),
+        ],
+    )
+
+    assert get_accuracy(client)["day"]["coverage"] == {
+        "hourlyForecastTargets": 24,
+        "forecast": {"selected": 1, "missing": 21, "conflicting": 1, "invalid": 1},
+        "actualAtHourlyTargets": {
+            "selected": 2,
+            "missing": 21,
+            "conflicting": 1,
+            "invalid": 0,
+        },
+        "matchedPairs": 1,
+        "halfHourActualTimeline": {
+            "targets": 48,
+            "selected": 3,
+            "missing": 44,
+            "conflicting": 1,
+            "invalid": 0,
+        },
+    }
