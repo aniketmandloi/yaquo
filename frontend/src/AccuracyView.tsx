@@ -326,7 +326,8 @@ export default function AccuracyView({ decisionDate }: { decisionDate: string })
   }, [decisionDate])
 
   return (
-    <section>
+    <section className="view hindsight">
+      <p className="eyebrow">Hindsight: uses outcomes after delivery</p>
       <h2>Retrospective accuracy against retrieved actuals</h2>
       <p>
         Compares the forecasts available at each decision cutoff with Elexon

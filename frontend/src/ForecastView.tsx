@@ -186,7 +186,8 @@ export default function ForecastView({ decisionDate }: { decisionDate: string })
   }, [decisionDate])
 
   return (
-    <section>
+    <section className="view">
+      <p className="eyebrow">Known at the 09:00 cutoff</p>
       <h2>Day-ahead forecast available at the decision cutoff</h2>
       <p>
         For each target hour, the latest Elexon wind forecast published at or
