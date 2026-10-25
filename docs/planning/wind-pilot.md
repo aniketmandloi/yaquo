@@ -31,13 +31,14 @@ For a target time, a forecast published after the agreed cutoff cannot represent
 
 ## Pending
 
-- Full-range data feasibility profile, including coverage at the chosen cutoff.
 - Acceptance of the proposed testing boundary below.
 - Final user confirmation of the resulting scope before implementation.
 
 ## Proposed testing boundary
 
 Exercise the Python API with small controlled snapshots to verify the externally visible behavior: selection at the cutoff (including equality), January decision/delivery boundaries, exact target matching, missing/conflicting records, latest retrieved actuals, and the three metric calculations. Do not rely on live Elexon calls for automated test expectations.
+
+Include unequal daily sample counts so monthly measures are calculated from all matched errors, rather than averaging daily metrics. Select the latest eligible publication per target before checking conflicts; a conflicting latest publication is excluded rather than silently replaced by an older forecast. Distinguish the absence of half-hour forecast targets from an unexpectedly missing hourly record.
 
 Verify frontend integration with static checks and a production build. Verify the packaged app with request-based checks where possible; the user starts servers and performs visual browser checks, per project instructions.
 
@@ -49,7 +50,7 @@ Before implementation, summarize the agreed scope and testing boundary for final
 
 ## Evidence and limits
 
-- [Elexon research](../research/elexon-wind.md): historical samples exist, forecast cadence differs from actuals in the sample, full-range coverage remains unverified.
+- [Elexon research](../research/elexon-wind.md): the agreed range has 31 delivery days with 24 hourly forecast targets and 48 half-hourly actuals each, yielding 744 exact matched pairs. Every 09:00 January decision cutoff selects the same day's 07:30 forecast publication for all next-day targets. No missing matching records or conflicting keys were found in the retrieved ranges; this does not establish archive completeness or final settlement values.
 - [Deployment research](../research/deployment.md): platform options and account prerequisites; no app or paid resource has been provisioned.
 
 The January accuracy analysis must distinguish retrospective realized errors from information available at a historical decision. A risk estimate available at a cutoff would require an evaluation window using only outcomes available by that cutoff.

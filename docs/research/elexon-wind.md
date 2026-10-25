@@ -1,6 +1,6 @@
 # Elexon wind pilot: evidence and open decisions
 
-Researched 2026-10-25 against first-party documentation and live public API samples. This note informs scope decisions; it does not establish complete January coverage.
+Researched 2026-10-25 against first-party documentation and live public API samples. A later full-range feasibility profile covers all agreed January decision dates; it establishes coverage of the retrieved snapshot, not archive completeness or final settlement truth.
 
 ## Findings that affect the design
 
@@ -74,9 +74,60 @@ These are proposed pilot rules, not documented provider guarantees:
 - Use signed error `forecast - actual` in MW: positive means wind overforecast, which can leave a purchaser short if treated as available supply. MAE measures typical absolute error; RMSE gives greater weight to large misses; mean signed error shows directional bias. These are mathematical definitions, not claims about predictive performance.
 - Monthly realized errors are retrospective analysis. Do not present an uncertainty range calculated using later January outcomes as knowledge available to an early-January purchaser. A decision-time risk estimate needs an explicitly prior evaluation window and sufficient available actuals.
 
+## Full-range feasibility profile after scope agreement
+
+The user selected January 1–31 decision dates, January 2–February 1 delivery dates, a 09:00 Europe/London cutoff, exact `startTime` matching, and exclusion of missing/conflicting observations with visible counts. The following read-only profile checks whether that combination is feasible before application implementation. January's London decision times were evaluated as 09:00 UTC.
+
+### Reproducible retrieval
+
+Both requests completed successfully as single bounded publication windows; daily chunking was unnecessary for these response sizes. These are public provider responses, not application-generated or synthetic data:
+
+```text
+GET https://data.elexon.co.uk/bmrs/api/v1/datasets/WINDFOR/stream?publishDateTimeFrom=2026-01-01T00%3A00%3A00Z&publishDateTimeTo=2026-02-01T00%3A00%3A00Z
+
+GET https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream?publishDateTimeFrom=2026-01-02T00%3A00%3A00Z&publishDateTimeTo=2026-02-03T00%3A00%3A00Z
+```
+
+The first response contained 18,104 WINDFOR rows, 248 distinct publication times, eight publications on each January date, and 73 target timestamps per publication. Every consecutive target interval within each publication was exactly 60 minutes. The second response contained 30,740 rows across all fuels, of which 1,537 were WIND, with 1,537 distinct targets and 30-minute consecutive intervals throughout its retrieved range. [Full-range forecast query](https://data.elexon.co.uk/bmrs/api/v1/datasets/WINDFOR/stream?publishDateTimeFrom=2026-01-01T00%3A00%3A00Z&publishDateTimeTo=2026-02-01T00%3A00%3A00Z), [Full-range actual query](https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream?publishDateTimeFrom=2026-01-02T00%3A00%3A00Z&publishDateTimeTo=2026-02-03T00%3A00%3A00Z)
+
+Temporary response files and their SHA-256 hashes:
+
+| Temporary file | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `/tmp/yaquo-elexon-windfor-month.json` | 2,039,857 | `94550bb536c188b9dde70d2532d209e5087e75f02c11e38f0ccc3a5e80ea2f53` |
+| `/tmp/yaquo-elexon-fuelhh-month.json` | 5,574,049 | `e76ee2bf7e4051a5e743cc66ec2cf3ad97eefdd9e212d80b862a55ec7e9bf6d4` |
+
+The data itself has not been added to the repository. Hashes identify the exact responses examined; future responses need not have identical ordering or contents.
+
+### Selection and validation method
+
+1. Parse timestamps as UTC instants, retain FUELHH WIND only, and group records by `(startTime, publishTime)`.
+2. Check for repeated keys and different generation values under the same key. Validate that generation values are finite numbers.
+3. For each decision date D from January 1 to January 31 inclusive, restrict target timestamps to `[D+1 00:00 UTC, D+2 00:00 UTC)`.
+4. For each target, select the greatest forecast `publishTime <= D 09:00 UTC`; exclude a conflicting selected key instead of choosing arbitrarily.
+5. For that same target, choose the greatest retrieved actual `publishTime`, exclude conflicts, and join on exact target instant. No interpolation, forward-fill, hourly averaging, or zero substitution was performed.
+6. Count forecast targets, actual targets, joined pairs, missing matching observations, and conflicts separately for every day.
+
+### Results
+
+Every one of the 31 decision dates had identical coverage: 24 eligible hourly forecast targets, 48 half-hourly actual targets for its delivery date, and 24 exact matches. Every selected forecast was published at 07:30 UTC on its decision date. None of the retrieved generation values had invalid numeric types; all selected values were finite. No repeated or conflicting `(startTime, publishTime)` keys were found in either retrieved WIND dataset.
+
+| Decision dates | Delivery dates | Eligible forecasts | Actual targets | Exact matched pairs | Missing eligible hourly forecasts | Missing matching actuals | Conflicting selected keys |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| January 1–31, each day | Following day, January 2–February 1 | 24 | 48 | 24 | 0 | 0 | 0 |
+| Entire selected range | January 2–February 1 | 744 | 1,488 | 744 | 0 | 0 | 0 |
+
+The 744 half-past-the-hour actual targets have no forecast at the exact same timestamp, consistent with the observed hourly forecast cadence. They are excluded from scoring. Accordingly, the interface should distinguish complete coverage of the available hourly forecasts (744/744) from coverage of the actual half-hour timeline (744/1,488); a lone “100% coverage” label would conceal that distinction.
+
+First boundary: January 1 07:30 forecast supplies all 24 January 2 targets. Last boundary: January 31 07:30 forecast supplies all 24 February 1 targets, including 23:00, with matching actuals. There were no days without eligible forecasts and no missing matches in this snapshot. Machine-readable per-day counts and selected values are temporarily available at `/tmp/yaquo-elexon-month-profile.json` and `/tmp/yaquo-elexon-month-selected.json`.
+
+### Limits of this profile
+
+The actual publication query ends February 3. “Latest retrieved actuals” therefore means latest within that response window; later corrections, if any, were not sought, and final reconciliation is not established. Publication history coverage is observed, not guaranteed by this profile. The profile validates data availability and alignment; it does not validate the application, establish forecast interval semantics, or provide a prior-only uncertainty model.
+
 ## What remains unverified
 
-- Complete January (and February 1 if needed) coverage, full-month cadence, and missing publications.
+- Any publications missing from the provider archive beyond the eight-per-day pattern observed in the full-range response.
 - Whether every superseded publication and source correction survives in the API archive.
 - Definitive API schema descriptions for all optional filters and error responses. The two tested publication filters work; guessed Swagger URLs returned 404 and the assignment's documentation pages require JavaScript when opened directly.
 - Forecast interval semantics beyond target timestamps; this is why the conservative recommendation is exact-start matching.
