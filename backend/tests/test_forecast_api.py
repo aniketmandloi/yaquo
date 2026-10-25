@@ -177,3 +177,9 @@ def test_unsupported_decision_dates_are_rejected(client_for, decision_date):
     assert response.json() == {
         "detail": "decision_date must be a date from 2026-01-01 to 2026-01-31"
     }
+
+
+def test_snapshot_provenance_is_exposed(client_for):
+    client = client_for([])
+
+    assert client.get("/api/snapshot").json() == {"retrievedAt": "x"}
