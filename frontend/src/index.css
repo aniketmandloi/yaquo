@@ -5,6 +5,7 @@
   --surface: #f6f5f8;
   --border: #dedce3;
   --accent: #1f6fb2;
+  --actual: #b5470b;
   --error: #b42318;
 
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -21,6 +22,7 @@
     --surface: #20212a;
     --border: #353744;
     --accent: #6cb4f0;
+    --actual: #f5a25d;
     --error: #ff8a80;
   }
 }
@@ -113,4 +115,24 @@ td {
 .hash {
   overflow-wrap: anywhere;
   font-size: 0.8rem;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.metrics th[scope='row'] {
+  white-space: normal;
+  min-width: 200px;
+}
+
+.metrics th[scope='row'] .note {
+  display: block;
+  font-weight: normal;
+}
+
+.coverage {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0 32px;
 }
