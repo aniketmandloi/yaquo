@@ -29,12 +29,13 @@ Accepted by the user in the design interview:
 
 For a target time, a forecast published after the agreed cutoff cannot represent information available at that decision. Retain publication times so the selection is inspectable.
 
-## Pending
+## Confirmation
 
-- Acceptance of the proposed testing boundary below.
-- Final user confirmation of the resulting scope before implementation.
+The user confirmed the complete scope and Python API testing boundary and instructed the agent to continue to the spec and ticket breakdown.
 
-## Proposed testing boundary
+Published specification: [GitHub issue #1](https://github.com/aniketmandloi/yaquo/issues/1). The local specification is retained alongside this plan. The ticket proposal remains unpublished pending the user's review of its granularity and blocking edges.
+
+## Agreed testing boundary
 
 Exercise the Python API with small controlled snapshots to verify the externally visible behavior: selection at the cutoff (including equality), January decision/delivery boundaries, exact target matching, missing/conflicting records, latest retrieved actuals, and the three metric calculations. Do not rely on live Elexon calls for automated test expectations.
 
@@ -46,7 +47,7 @@ Verify frontend integration with static checks and a production build. Verify th
 
 The two agreed views provide historical decision support and explain the limits of the data. No additional generation data source is allowed by the brief. Demand, prices, and customer portfolio inputs are unavailable, so the permitted data cannot establish procurement volumes or financial savings.
 
-Before implementation, summarize the agreed scope and testing boundary for final confirmation. Then synthesize a spec and propose small end-to-end tickets, preserving time for deployment, documentation, and the mandatory video.
+The scope interview is complete. Synthesize a spec and propose small end-to-end tickets, preserving time for deployment, documentation, and the mandatory video.
 
 ## Evidence and limits
 
