@@ -49,8 +49,8 @@ To serve everything from the backend instead, run `npm run build` in `frontend/`
 ### Checks
 
 ```sh
-cd backend && pytest
-cd frontend && npm run lint && npm run build
+(cd backend && pytest)
+(cd frontend && npm run lint && npm run build)
 ```
 
 ## Docker
