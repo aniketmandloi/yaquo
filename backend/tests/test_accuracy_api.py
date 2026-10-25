@@ -147,3 +147,37 @@ def test_identical_duplicate_actuals_count_once(client_for):
         "selected"
     )
     assert body["day"]["metrics"]["matchedPairs"] == 1
+
+
+def test_no_valid_pairs_is_insufficient_data_not_zero(client_for):
+    client = client_for(
+        [forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000)],
+        [actual("2026-01-16T01:00:00Z", "2026-01-16T01:30:00Z", 900)],
+    )
+
+    body = get_accuracy(client)
+    pairs = pairs_by_start(body)
+
+    assert pairs["2026-01-16T00:00:00+00:00"]["actualStatus"] == "missing"
+    assert pairs["2026-01-16T00:00:00+00:00"]["actual"] is None
+    assert pairs["2026-01-16T01:00:00+00:00"]["forecastStatus"] == "missing"
+    assert body["day"]["metrics"] == {
+        "matchedPairs": 0,
+        "mae": None,
+        "bias": None,
+        "rmse": None,
+    }
+
+
+def test_valid_zero_error_is_a_zero_score(client_for):
+    client = client_for(
+        [forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 0)],
+        [actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 0)],
+    )
+
+    assert get_accuracy(client)["day"]["metrics"] == {
+        "matchedPairs": 1,
+        "mae": 0,
+        "bias": 0,
+        "rmse": 0,
+    }

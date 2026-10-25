@@ -9,6 +9,8 @@ ActualSelection = dict[datetime, tuple[datetime, list]]
 
 def metrics(errors: list) -> dict:
     count = len(errors)
+    if count == 0:
+        return {"matchedPairs": 0, "mae": None, "bias": None, "rmse": None}
     return {
         "matchedPairs": count,
         "mae": sum(abs(e) for e in errors) / count,
