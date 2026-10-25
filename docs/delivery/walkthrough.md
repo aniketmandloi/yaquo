@@ -6,7 +6,7 @@ Two parts for the unlisted YouTube video: about 4.5 minutes for the customer and
 
 **0:00–0:30 The problem.** You buy power a day ahead, and wind covers part of demand. To know how much to buy, you need the wind forecast that existed when you made the decision, and an idea of how wrong it tends to be. A forecast downloaded today includes later updates you didn't have, so comparing that with actuals makes past forecasts look better than they were.
 
-**0:30–2:00 Forecast view.** *Screen: "Day-ahead forecast available at the decision cutoff", select 15 January.*
+**0:30–2:00 Forecast view.** *Screen: pick 15 January in the decision date bar at the top; it drives both views. Scroll to "Day-ahead forecast available at the decision cutoff".*
 
 - Decision date 15 January, delivery date 16 January, shown separately.
 - The cutoff is 09:00 London time. Say it is a pilot assumption that can be changed, not an official auction deadline.
@@ -18,7 +18,7 @@ Two parts for the unlisted YouTube video: about 4.5 minutes for the customer and
 - Same date: forecast and actual on one chart. Hover to show a signed error.
 - Explain the sign: positive means more wind was forecast than arrived, so a buyer relying on it could end up short.
 - 15 January: MAE 810 MW, bias +349 MW, RMSE 970 MW.
-- Contrast: 18 January was the closest day (MAE 684 MW, underforecast). 27 January was the furthest off (MAE 5,329 MW, all overforecast).
+- Point at the January bias strip: most columns sit above the line. Click 18 January, the closest day (MAE 684 MW, underforecast), then 27 January, the furthest off (MAE 5,329 MW, all overforecast).
 - January as a whole: MAE about 2,022 MW, bias about +1,746 MW, RMSE about 2,497 MW across 744 hourly pairs. 27 of 31 days had positive bias. The takeaway: in January 2026 the day-ahead forecast mostly overestimated wind.
 - Coverage: all 744 hourly forecasts matched. Actuals are half-hourly, so half the actual timeline has no forecast to compare against. That's how often each dataset reports, not missing data.
 

@@ -18,12 +18,14 @@ import {
   type DecisionAccuracy,
   type TargetStatus,
 } from './api'
+import JanuaryStrip from './JanuaryStrip'
 import {
-  DECISION_DATES,
   formatCalendarDate,
   formatLondonDateTime,
   formatLondonTime,
 } from './time'
+
+const AXIS_TICK = { fill: 'var(--muted)', fontSize: 12 }
 
 const STATUS_LABELS: Record<TargetStatus, string> = {
   selected: 'Selected',
@@ -74,19 +76,25 @@ function metricText(metric: number | null, signed = false): string {
   return `${(signed ? signedMw : mw).format(metric)} MW`
 }
 
-function MetricsTable({
+function biasDirection(bias: number | null): string | null {
+  if (bias === null || bias === 0) return null
+  return bias > 0 ? 'overforecast' : 'underforecast'
+}
+
+function MetricCards({
   day,
   period,
 }: {
   day: AccuracyMetrics
   period: AccuracyMetrics
 }) {
-  const rows = [
+  const cards = [
     {
       name: 'MAE',
       explanation: 'Average size of a miss, ignoring direction.',
       day: metricText(day.mae),
       period: metricText(period.mae),
+      direction: null,
     },
     {
       name: 'Bias (mean signed error)',
@@ -94,44 +102,39 @@ function MetricsTable({
         'Average forecast minus actual. Positive means wind was overforecast, which can leave a buyer relying on it short.',
       day: metricText(day.bias, true),
       period: metricText(period.bias, true),
+      direction: biasDirection(day.bias),
     },
     {
       name: 'RMSE',
       explanation: 'Like MAE, but larger misses count more heavily.',
       day: metricText(day.rmse),
       period: metricText(period.rmse),
-    },
-    {
-      name: 'Matched pairs',
-      explanation: 'Hourly targets with both a usable forecast and actual.',
-      day: String(day.matchedPairs),
-      period: String(period.matchedPairs),
+      direction: null,
     },
   ]
   return (
-    <div className="table-scroll">
-      <table className="metrics">
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Selected delivery day</th>
-            <th>All January decisions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.name}>
-              <th scope="row">
-                {row.name}
-                <span className="note">{row.explanation}</span>
-              </th>
-              <td>{row.day}</td>
-              <td>{row.period}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="metric-cards">
+        {cards.map((card) => (
+          <div key={card.name} className="metric-card">
+            <h4>{card.name}</h4>
+            <p className={`metric-value ${card.direction ?? ''}`}>
+              {card.day}
+              {card.direction && (
+                <span className="metric-direction">{card.direction}</span>
+              )}
+            </p>
+            <p className="metric-period">All January: {card.period}</p>
+            <p className="note">{card.explanation}</p>
+          </div>
+        ))}
+      </div>
+      <p className="note">
+        Matched pairs: {day.matchedPairs} on this delivery day,{' '}
+        {period.matchedPairs} across January. Pairs are hourly targets with
+        both a usable forecast and actual.
+      </p>
+    </>
   )
 }
 
@@ -219,7 +222,13 @@ function PairTable({ pairs }: { pairs: AccuracyPair[] }) {
   )
 }
 
-function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
+function AccuracyDetails({
+  accuracy,
+  onDecisionDateChange,
+}: {
+  accuracy: DecisionAccuracy
+  onDecisionDateChange: (decisionDate: string) => void
+}) {
   const { day, period } = accuracy
   return (
     <>
@@ -240,29 +249,46 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
         </div>
       </dl>
 
+      <JanuaryStrip
+        days={period.days}
+        decisionDate={accuracy.decisionDate}
+        onSelect={onDecisionDateChange}
+      />
+
       <h3>Forecast and actual wind generation ({accuracy.unit})</h3>
       <div className="chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={day.pairs} margin={{ left: 16, right: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="var(--line)" />
             <XAxis
               dataKey="startTime"
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={formatLondonTime}
-              label={{ value: 'Target time (London)', position: 'insideBottom', offset: -4 }}
+              label={{
+                value: 'Target time (London)',
+                position: 'insideBottom',
+                offset: -4,
+                fill: 'var(--muted)',
+              }}
               height={48}
             />
             <YAxis
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={(v: number) => mw.format(v)}
-              label={{ value: 'MW', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'MW', angle: -90, position: 'insideLeft', fill: 'var(--muted)' }}
             />
             <Tooltip content={PairTooltip} />
-            <Legend verticalAlign="top" />
+            <Legend verticalAlign="top" wrapperStyle={{ fontSize: 14 }} />
             <Line
               type="linear"
               dataKey="forecast"
               name="Forecast at cutoff"
-              stroke="var(--accent)"
+              stroke="var(--forecast)"
               strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -273,6 +299,8 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
               stroke="var(--actual)"
               strokeWidth={2}
               strokeDasharray="6 3"
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -286,7 +314,7 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
       </p>
 
       <h3>Accuracy</h3>
-      <MetricsTable day={day.metrics} period={period.metrics} />
+      <MetricCards day={day.metrics} period={period.metrics} />
       <p className="note">
         The January figures pool every matched hourly error from the{' '}
         {formatCalendarDate(period.firstDecisionDate)} to{' '}
@@ -305,10 +333,17 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
   )
 }
 
-export default function AccuracyView() {
-  const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
+export default function AccuracyView({
+  decisionDate,
+  onDecisionDateChange,
+}: {
+  decisionDate: string
+  onDecisionDateChange: (decisionDate: string) => void
+}) {
   const [result, setResult] = useState<Result | null>(null)
-  const state = result?.decisionDate === decisionDate ? result : null
+  // Earlier results stay on screen, dimmed, so the page keeps its height
+  // and scroll position while the next date loads.
+  const loading = result?.decisionDate !== decisionDate
 
   useEffect(() => {
     let current = true
@@ -328,7 +363,8 @@ export default function AccuracyView() {
   }, [decisionDate])
 
   return (
-    <section>
+    <section className="view hindsight">
+      <p className="eyebrow">Hindsight: uses outcomes after delivery</p>
       <h2>Retrospective accuracy against retrieved actuals</h2>
       <p>
         Compares the forecasts available at each decision cutoff with Elexon
@@ -341,27 +377,22 @@ export default function AccuracyView() {
         settlement data, and later corrections may exist. Scores do not imply
         procurement volumes or financial savings.
       </p>
-      <label className="picker">
-        Decision date{' '}
-        <select
-          value={decisionDate}
-          onChange={(e) => setDecisionDate(e.target.value)}
-        >
-          {DECISION_DATES.map((d) => (
-            <option key={d} value={d}>
-              {formatCalendarDate(d)}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {state === null && <p role="status">Loading accuracy…</p>}
-      {state?.kind === 'error' && (
+      {(result === null || (loading && result.kind === 'error')) && (
+        <p role="status">Loading accuracy…</p>
+      )}
+      {!loading && result?.kind === 'error' && (
         <p role="alert" className="error">
-          Could not load accuracy: {state.message}
+          Could not load accuracy: {result.message}
         </p>
       )}
-      {state?.kind === 'ready' && <AccuracyDetails accuracy={state.accuracy} />}
+      {result?.kind === 'ready' && (
+        <div className="results" aria-busy={loading}>
+          <AccuracyDetails
+            accuracy={result.accuracy}
+            onDecisionDateChange={onDecisionDateChange}
+          />
+        </div>
+      )}
     </section>
   )
 }

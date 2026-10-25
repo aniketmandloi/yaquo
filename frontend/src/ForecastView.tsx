@@ -11,12 +11,13 @@ import {
 } from 'recharts'
 import { fetchForecast, type DecisionForecast, type ForecastTarget } from './api'
 import {
-  DECISION_DATES,
   formatAge,
   formatCalendarDate,
   formatLondonDateTime,
   formatLondonTime,
 } from './time'
+
+const AXIS_TICK = { fill: 'var(--muted)', fontSize: 12 }
 
 const STATUS_LABELS: Record<ForecastTarget['status'], string> = {
   selected: 'Selected',
@@ -134,24 +135,35 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
       <div className="chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={forecast.targets} margin={{ left: 16, right: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="var(--line)" />
             <XAxis
               dataKey="startTime"
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={formatLondonTime}
-              label={{ value: 'Target time (London)', position: 'insideBottom', offset: -4 }}
+              label={{
+                value: 'Target time (London)',
+                position: 'insideBottom',
+                offset: -4,
+                fill: 'var(--muted)',
+              }}
               height={48}
             />
             <YAxis
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={(v: number) => v.toLocaleString('en-GB')}
-              label={{ value: 'MW', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'MW', angle: -90, position: 'insideLeft', fill: 'var(--muted)' }}
             />
             <Tooltip content={TargetTooltip} />
             <Line
               type="linear"
               dataKey="generation"
               name="Forecast"
-              stroke="var(--accent)"
+              stroke="var(--forecast)"
               strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -165,10 +177,11 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
   )
 }
 
-export default function ForecastView() {
-  const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
+export default function ForecastView({ decisionDate }: { decisionDate: string }) {
   const [result, setResult] = useState<Result | null>(null)
-  const state = result?.decisionDate === decisionDate ? result : null
+  // Earlier results stay on screen, dimmed, so the page keeps its height
+  // and scroll position while the next date loads.
+  const loading = result?.decisionDate !== decisionDate
 
   useEffect(() => {
     let current = true
@@ -188,7 +201,8 @@ export default function ForecastView() {
   }, [decisionDate])
 
   return (
-    <section>
+    <section className="view">
+      <p className="eyebrow">Known at the 09:00 cutoff</p>
       <h2>Day-ahead forecast available at the decision cutoff</h2>
       <p>
         For each target hour, the latest Elexon wind forecast published at or
@@ -196,27 +210,19 @@ export default function ForecastView() {
         never used. The 09:00 cutoff is a pilot assumption, not an exchange
         auction deadline.
       </p>
-      <label className="picker">
-        Decision date{' '}
-        <select
-          value={decisionDate}
-          onChange={(e) => setDecisionDate(e.target.value)}
-        >
-          {DECISION_DATES.map((d) => (
-            <option key={d} value={d}>
-              {formatCalendarDate(d)}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {state === null && <p role="status">Loading forecast…</p>}
-      {state?.kind === 'error' && (
+      {(result === null || (loading && result.kind === 'error')) && (
+        <p role="status">Loading forecast…</p>
+      )}
+      {!loading && result?.kind === 'error' && (
         <p role="alert" className="error">
-          Could not load the forecast: {state.message}
+          Could not load the forecast: {result.message}
         </p>
       )}
-      {state?.kind === 'ready' && <ForecastDetails forecast={state.forecast} />}
+      {result?.kind === 'ready' && (
+        <div className="results" aria-busy={loading}>
+          <ForecastDetails forecast={result.forecast} />
+        </div>
+      )}
     </section>
   )
 }

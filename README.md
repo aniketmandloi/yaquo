@@ -7,8 +7,8 @@ A web app for a UK utility's day-ahead procurement team. For each January 2026 p
 
 ## What it shows
 
-1. **Day-ahead forecast (as of the decision).** Pick a decision date from January 1 to 31, 2026. The app shows the next day's hourly wind forecast as it stood at 09:00 Europe/London on the decision date, with each value's publication time and age at the cutoff.
-2. **Retrospective accuracy.** The same selected forecasts compared with actual generation at identical target times, with MAE, mean signed error (bias) and RMSE in MW for the chosen day and for the whole of January.
+1. **Day-ahead forecast (as of the decision).** Pick a decision date from January 1 to 31, 2026, in the bar at the top; it drives both views. The app shows the next day's hourly wind forecast as it stood at 09:00 Europe/London on the decision date, with each value's publication time and age at the cutoff.
+2. **Retrospective accuracy.** The same selected forecasts compared with actual generation at identical target times, with MAE, mean signed error (bias) and RMSE in MW for the chosen day and for the whole of January. A strip of all 31 decision dates shows each day's bias; clicking one selects that date.
 
 ## Directories
 
@@ -18,7 +18,7 @@ A web app for a UK utility's day-ahead procurement team. For each January 2026 p
 | `backend/data/snapshot/` | Bundled Elexon WINDFOR and FUELHH WIND records, plus `metadata.json` with their provenance. The app reads only these files. |
 | `backend/scripts/fetch_snapshot.py` | Retrieves the snapshot again from the public Elexon API. |
 | `backend/tests/` | API tests against small controlled snapshots. |
-| `frontend/src/` | React app. `ForecastView.tsx` and `AccuracyView.tsx` are the two views, `SnapshotProvenance.tsx` shows the data source, `api.ts` is the typed API client. |
+| `frontend/src/` | React app. `ForecastView.tsx` and `AccuracyView.tsx` are the two views, `DecisionPicker.tsx` is the shared date control, `JanuaryStrip.tsx` is the daily bias strip, `SnapshotProvenance.tsx` shows the data source, `api.ts` is the typed API client. |
 | `docs/` | Planning, research notes, and the video walkthrough scripts. |
 | `GLOSSARY.md` | Domain terms used across code and docs. |
 | `Dockerfile`, `heroku.yml` | One image serving the frontend and API; Heroku builds it from `heroku.yml`. |

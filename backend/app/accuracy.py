@@ -102,11 +102,12 @@ def summed(items: list):
 
 
 def period_accuracy(forecasts: list[Observation], actuals: ActualSelection) -> dict:
-    days = []
+    decisions = []
     decision_date = FIRST_DECISION_DATE
     while decision_date <= LAST_DECISION_DATE:
-        days.append(decision_accuracy(forecasts, actuals, decision_date)["day"])
+        decisions.append(decision_accuracy(forecasts, actuals, decision_date))
         decision_date += timedelta(days=1)
+    days = [decision["day"] for decision in decisions]
     # Pooled errors, so days with more matched pairs carry more weight.
     errors = [
         p["error"] for day in days for p in day["pairs"] if p["error"] is not None
@@ -116,4 +117,12 @@ def period_accuracy(forecasts: list[Observation], actuals: ActualSelection) -> d
         "lastDecisionDate": LAST_DECISION_DATE.isoformat(),
         "metrics": metrics(errors),
         "coverage": summed([day["coverage"] for day in days]),
+        "days": [
+            {
+                "decisionDate": decision["decisionDate"],
+                "deliveryDate": decision["deliveryDate"],
+                "metrics": decision["day"]["metrics"],
+            }
+            for decision in decisions
+        ],
     }
