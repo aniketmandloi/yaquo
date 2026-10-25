@@ -1,8 +1,14 @@
-# Wind pilot ticket proposal
+# Wind pilot tickets
 
-Proposed breakdown for review, not published tickets. The user has confirmed the product scope and Python API testing boundary. No additional product decisions are introduced here.
+The user approved this three-ticket breakdown and its blocking edges. The tickets are published with the `ready-for-agent` label as sub-issues of the specification, with native GitHub blocking dependencies.
 
 Parent specification: [GitHub issue #1](https://github.com/aniketmandloi/yaquo/issues/1).
+
+| Slice | Published ticket | Blocked by |
+| --- | --- | --- |
+| Forecast view | [#2](https://github.com/aniketmandloi/yaquo/issues/2) | None |
+| Accuracy view | [#3](https://github.com/aniketmandloi/yaquo/issues/3) | #2 |
+| Public delivery | [#4](https://github.com/aniketmandloi/yaquo/issues/4) | #3 |
 
 ## Budget
 
@@ -62,8 +68,6 @@ Keep the whole assignment within 16 hours, including research, planning, verific
 
 The last delivery steps may require the user's authenticated accounts, recording, browser checks, or form access. Prepare all supporting material agents can produce, then request only the human actions that remain. Keep this ticket open until its actual completion gates are satisfied.
 
-## Review questions
+## Approval
 
-1. Does this three-ticket granularity feel right, or should the accuracy work be split into daily and whole-period slices?
-2. Do the blocking edges reflect the real prerequisites?
-3. Should any tickets be merged or split before publication?
+The user approved the three-ticket granularity and dependency order and instructed the agent to publish them. Ticket #2 is the first unblocked implementation task. Ticket #4 remains incomplete until deployment, video, access checks, and submission are actually complete.

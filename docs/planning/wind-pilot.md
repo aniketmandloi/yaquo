@@ -33,7 +33,7 @@ For a target time, a forecast published after the agreed cutoff cannot represent
 
 The user confirmed the complete scope and Python API testing boundary and instructed the agent to continue to the spec and ticket breakdown.
 
-Published specification: [GitHub issue #1](https://github.com/aniketmandloi/yaquo/issues/1). The local specification is retained alongside this plan. The ticket proposal remains unpublished pending the user's review of its granularity and blocking edges.
+Published specification: [GitHub issue #1](https://github.com/aniketmandloi/yaquo/issues/1). The local specification is retained alongside this plan. The user approved the ticket breakdown; [forecast #2](https://github.com/aniketmandloi/yaquo/issues/2), [accuracy #3](https://github.com/aniketmandloi/yaquo/issues/3), and [delivery #4](https://github.com/aniketmandloi/yaquo/issues/4) are published in dependency order. Ticket #2 is unblocked.
 
 ## Agreed testing boundary
 
