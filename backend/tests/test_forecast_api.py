@@ -36,3 +36,32 @@ def test_decision_date_maps_to_next_delivery_day_and_london_cutoff(client_for):
     assert body["cutoff"] == "2026-01-15T09:00:00+00:00"
     assert body["timezone"] == "Europe/London"
     assert body["unit"] == "MW"
+
+
+def get_targets(client, decision_date="2026-01-15"):
+    body = client.get("/api/forecasts", params={"decision_date": decision_date}).json()
+    return {row["startTime"]: row for row in body["targets"]}
+
+
+def test_selects_latest_publication_at_or_before_cutoff_per_target(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 100),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T09:00:00Z", 200),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T09:30:00Z", 300),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 400),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T11:30:00Z", 500),
+        ]
+    )
+
+    targets = get_targets(client)
+
+    assert targets["2026-01-16T00:00:00+00:00"] == {
+        "startTime": "2026-01-16T00:00:00+00:00",
+        "status": "selected",
+        "generation": 200,
+        "publishTime": "2026-01-15T09:00:00+00:00",
+        "ageMinutes": 0,
+    }
+    assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 400
+    assert targets["2026-01-16T01:00:00+00:00"]["ageMinutes"] == 90
