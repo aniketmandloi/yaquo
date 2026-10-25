@@ -39,8 +39,8 @@ export default function App() {
             identical target times.
           </li>
         </ul>
+        <SnapshotProvenance />
       </section>
-      <SnapshotProvenance />
     </main>
   )
 }

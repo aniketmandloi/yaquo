@@ -13,8 +13,8 @@ export default function SnapshotProvenance() {
   }, [])
 
   return (
-    <section>
-      <h2>Snapshot provenance</h2>
+    <>
+      <h3>Snapshot provenance</h3>
       {error && (
         <p role="alert" className="error">
           Could not load snapshot details: {error}
@@ -27,21 +27,24 @@ export default function SnapshotProvenance() {
             {formatLondonDateTime(provenance.retrievedAt)}. The app reads this
             snapshot rather than calling Elexon on each request.
           </p>
-          <ul>
-            {Object.entries(provenance.datasets).map(([name, d]) => (
-              <li key={name}>
-                <strong>{name}</strong>: publications from{' '}
-                {formatLondonDateTime(d.publishDateTimeFrom)} to{' '}
-                {formatLondonDateTime(d.publishDateTimeTo)};{' '}
-                {d.storedRecords.toLocaleString('en-GB')} of{' '}
-                {d.responseRecords.toLocaleString('en-GB')} records kept.{' '}
-                {d.transformation} <a href={d.url}>Source query</a>. SHA-256{' '}
-                <code className="hash">{d.storedSha256}</code>
-              </li>
-            ))}
-          </ul>
+          <details>
+            <summary>Query bounds, record counts, and hashes</summary>
+            <ul>
+              {Object.entries(provenance.datasets).map(([name, d]) => (
+                <li key={name}>
+                  <strong>{name}</strong>: publications from{' '}
+                  {formatLondonDateTime(d.publishDateTimeFrom)} to{' '}
+                  {formatLondonDateTime(d.publishDateTimeTo)};{' '}
+                  {d.storedRecords.toLocaleString('en-GB')} of{' '}
+                  {d.responseRecords.toLocaleString('en-GB')} records kept.{' '}
+                  {d.transformation} <a href={d.url}>Source query</a>. SHA-256{' '}
+                  <code className="hash">{d.storedSha256}</code>
+                </li>
+              ))}
+            </ul>
+          </details>
         </>
       )}
-    </section>
+    </>
   )
 }
