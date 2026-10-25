@@ -259,14 +259,52 @@ thead th {
   overflow-x: auto;
 }
 
-.metrics th[scope='row'] {
-  white-space: normal;
-  min-width: 200px;
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
 }
 
-.metrics th[scope='row'] .note {
-  display: block;
-  font-weight: normal;
+.metric-card {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.metric-card p {
+  margin: 0;
+}
+
+.metric-card .note {
+  margin-top: 8px;
+}
+
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.metric-value.overforecast {
+  color: var(--over);
+}
+
+.metric-value.underforecast {
+  color: var(--under);
+}
+
+.metric-direction {
+  margin-left: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.metric-period {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .coverage {

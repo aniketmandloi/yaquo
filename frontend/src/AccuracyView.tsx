@@ -73,19 +73,25 @@ function metricText(metric: number | null, signed = false): string {
   return `${(signed ? signedMw : mw).format(metric)} MW`
 }
 
-function MetricsTable({
+function biasDirection(bias: number | null): string | null {
+  if (bias === null || bias === 0) return null
+  return bias > 0 ? 'overforecast' : 'underforecast'
+}
+
+function MetricCards({
   day,
   period,
 }: {
   day: AccuracyMetrics
   period: AccuracyMetrics
 }) {
-  const rows = [
+  const cards = [
     {
       name: 'MAE',
       explanation: 'Average size of a miss, ignoring direction.',
       day: metricText(day.mae),
       period: metricText(period.mae),
+      direction: null,
     },
     {
       name: 'Bias (mean signed error)',
@@ -93,44 +99,39 @@ function MetricsTable({
         'Average forecast minus actual. Positive means wind was overforecast, which can leave a buyer relying on it short.',
       day: metricText(day.bias, true),
       period: metricText(period.bias, true),
+      direction: biasDirection(day.bias),
     },
     {
       name: 'RMSE',
       explanation: 'Like MAE, but larger misses count more heavily.',
       day: metricText(day.rmse),
       period: metricText(period.rmse),
-    },
-    {
-      name: 'Matched pairs',
-      explanation: 'Hourly targets with both a usable forecast and actual.',
-      day: String(day.matchedPairs),
-      period: String(period.matchedPairs),
+      direction: null,
     },
   ]
   return (
-    <div className="table-scroll">
-      <table className="metrics">
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Selected delivery day</th>
-            <th>All January decisions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.name}>
-              <th scope="row">
-                {row.name}
-                <span className="note">{row.explanation}</span>
-              </th>
-              <td>{row.day}</td>
-              <td>{row.period}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="metric-cards">
+        {cards.map((card) => (
+          <div key={card.name} className="metric-card">
+            <h4>{card.name}</h4>
+            <p className={`metric-value ${card.direction ?? ''}`}>
+              {card.day}
+              {card.direction && (
+                <span className="metric-direction">{card.direction}</span>
+              )}
+            </p>
+            <p className="metric-period">All January: {card.period}</p>
+            <p className="note">{card.explanation}</p>
+          </div>
+        ))}
+      </div>
+      <p className="note">
+        Matched pairs: {day.matchedPairs} on this delivery day,{' '}
+        {period.matchedPairs} across January. Pairs are hourly targets with
+        both a usable forecast and actual.
+      </p>
+    </>
   )
 }
 
@@ -285,7 +286,7 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
       </p>
 
       <h3>Accuracy</h3>
-      <MetricsTable day={day.metrics} period={period.metrics} />
+      <MetricCards day={day.metrics} period={period.metrics} />
       <p className="note">
         The January figures pool every matched hourly error from the{' '}
         {formatCalendarDate(period.firstDecisionDate)} to{' '}
