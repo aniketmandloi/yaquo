@@ -25,13 +25,20 @@ def missing_target(start: datetime) -> dict:
     }
 
 
-def selected_target(obs: Observation, cutoff: datetime) -> dict:
+def selected_target(
+    start: datetime, publish: datetime, generations: set, cutoff: datetime
+) -> dict:
+    # A conflicting latest key is reported, never replaced by an older forecast.
+    if len(generations) > 1:
+        status, generation = "conflicting", None
+    else:
+        status, generation = "selected", next(iter(generations))
     return {
-        "startTime": utc_text(obs.start),
-        "status": "selected",
-        "generation": obs.generation,
-        "publishTime": utc_text(obs.publish),
-        "ageMinutes": int((cutoff - obs.publish).total_seconds() // 60),
+        "startTime": utc_text(start),
+        "status": status,
+        "generation": generation,
+        "publishTime": utc_text(publish),
+        "ageMinutes": int((cutoff - publish).total_seconds() // 60),
     }
 
 
@@ -41,12 +48,12 @@ def decision_forecast(forecasts: list[Observation], decision_date: date) -> dict
     day_start = london_midnight(delivery_date)
     day_end = london_midnight(delivery_date + timedelta(days=1))
 
-    latest: dict[datetime, Observation] = {}
+    latest: dict[datetime, datetime] = {}
+    values: dict[tuple[datetime, datetime], set] = {}
     for obs in forecasts:
         if day_start <= obs.start < day_end and obs.publish <= cutoff:
-            current = latest.get(obs.start)
-            if current is None or obs.publish > current.publish:
-                latest[obs.start] = obs
+            latest[obs.start] = max(latest.get(obs.start, obs.publish), obs.publish)
+            values.setdefault((obs.start, obs.publish), set()).add(obs.generation)
 
     hourly = []
     start = day_start
@@ -56,11 +63,13 @@ def decision_forecast(forecasts: list[Observation], decision_date: date) -> dict
 
     targets = []
     for start in sorted(set(hourly) | set(latest)):
-        obs = latest.get(start)
-        if obs is None:
+        publish = latest.get(start)
+        if publish is None:
             targets.append(missing_target(start))
         else:
-            targets.append(selected_target(obs, cutoff))
+            targets.append(
+                selected_target(start, publish, values[start, publish], cutoff)
+            )
 
     statuses = [target["status"] for target in targets]
     quality = {

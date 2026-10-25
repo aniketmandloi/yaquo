@@ -97,3 +97,30 @@ def test_reports_hourly_targets_without_eligible_forecast_as_missing(client_for)
         "conflicting": 0,
         "invalid": 0,
     }
+
+
+def test_conflicting_latest_key_is_excluded_without_older_fallback(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T04:30:00Z", 100),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 110),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 120),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 130),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 130),
+        ]
+    )
+
+    body = client.get("/api/forecasts", params={"decision_date": "2026-01-15"}).json()
+    targets = {row["startTime"]: row for row in body["targets"]}
+
+    assert targets["2026-01-16T00:00:00+00:00"] == {
+        "startTime": "2026-01-16T00:00:00+00:00",
+        "status": "conflicting",
+        "generation": None,
+        "publishTime": "2026-01-15T07:30:00+00:00",
+        "ageMinutes": 90,
+    }
+    assert targets["2026-01-16T01:00:00+00:00"]["status"] == "selected"
+    assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 130
+    assert body["quality"]["conflicting"] == 1
+    assert body["quality"]["selected"] == 1
