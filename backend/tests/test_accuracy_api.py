@@ -81,3 +81,69 @@ def test_day_scores_forecast_minus_actual_at_identical_targets(client_for):
         "bias": pytest.approx(-200 / 3),
         "rmse": pytest.approx(182.574186),
     }
+
+
+def test_latest_retrieved_actual_publication_is_compared(client_for):
+    client = client_for(
+        [forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000)],
+        [
+            actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 700),
+            actual("2026-01-16T00:00:00Z", "2026-01-17T10:00:00Z", 800),
+            actual("2026-01-16T00:00:00Z", "2026-01-16T05:00:00Z", 750),
+        ],
+    )
+
+    row = pairs_by_start(get_accuracy(client))["2026-01-16T00:00:00+00:00"]
+
+    assert row["actual"] == 800
+    assert row["actualPublishTime"] == "2026-01-17T10:00:00+00:00"
+    assert row["error"] == 200
+
+
+@pytest.mark.parametrize(
+    "latest_values, status",
+    [([800, 850], "conflicting"), ([None], "invalid"), (["800"], "invalid")],
+)
+def test_unusable_latest_actual_is_excluded_without_older_fallback(
+    client_for, latest_values, status
+):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 1000),
+        ],
+        [
+            actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 700),
+            *[
+                actual("2026-01-16T00:00:00Z", "2026-01-16T06:00:00Z", v)
+                for v in latest_values
+            ],
+            actual("2026-01-16T01:00:00Z", "2026-01-16T01:30:00Z", 900),
+        ],
+    )
+
+    body = get_accuracy(client)
+    row = pairs_by_start(body)["2026-01-16T00:00:00+00:00"]
+
+    assert row["actualStatus"] == status
+    assert row["actual"] is None
+    assert row["error"] is None
+    assert body["day"]["metrics"]["matchedPairs"] == 1
+    assert body["day"]["metrics"]["mae"] == 100
+
+
+def test_identical_duplicate_actuals_count_once(client_for):
+    client = client_for(
+        [forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000)],
+        [
+            actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 900),
+            actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 900),
+        ],
+    )
+
+    body = get_accuracy(client)
+
+    assert pairs_by_start(body)["2026-01-16T00:00:00+00:00"]["actualStatus"] == (
+        "selected"
+    )
+    assert body["day"]["metrics"]["matchedPairs"] == 1
