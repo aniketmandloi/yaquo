@@ -2,6 +2,8 @@ import math
 from datetime import date, datetime, timedelta
 
 from app.forecasts import (
+    FIRST_DECISION_DATE,
+    LAST_DECISION_DATE,
     classify,
     decision_forecast,
     london_midnight,
@@ -90,4 +92,28 @@ def decision_accuracy(
                 ),
             },
         },
+    }
+
+
+def summed(items: list):
+    if isinstance(items[0], dict):
+        return {key: summed([item[key] for item in items]) for key in items[0]}
+    return sum(items)
+
+
+def period_accuracy(forecasts: list[Observation], actuals: ActualSelection) -> dict:
+    days = []
+    decision_date = FIRST_DECISION_DATE
+    while decision_date <= LAST_DECISION_DATE:
+        days.append(decision_accuracy(forecasts, actuals, decision_date)["day"])
+        decision_date += timedelta(days=1)
+    # Pooled errors, so days with more matched pairs carry more weight.
+    errors = [
+        p["error"] for day in days for p in day["pairs"] if p["error"] is not None
+    ]
+    return {
+        "firstDecisionDate": FIRST_DECISION_DATE.isoformat(),
+        "lastDecisionDate": LAST_DECISION_DATE.isoformat(),
+        "metrics": metrics(errors),
+        "coverage": summed([day["coverage"] for day in days]),
     }

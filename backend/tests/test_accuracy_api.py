@@ -219,3 +219,51 @@ def test_coverage_separates_hourly_matches_from_half_hour_actual_timeline(client
             "invalid": 0,
         },
     }
+
+
+def test_period_metrics_pool_every_matched_error_across_january(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-02T00:00:00Z", "2026-01-01T07:30:00Z", 1300),
+            forecast("2026-01-03T00:00:00Z", "2026-01-02T07:30:00Z", 1000),
+            forecast("2026-01-03T01:00:00Z", "2026-01-02T07:30:00Z", 1000),
+            forecast("2026-01-03T02:00:00Z", "2026-01-02T07:30:00Z", 900),
+        ],
+        [
+            actual("2026-01-02T00:00:00Z", "2026-01-02T00:30:00Z", 1000),
+            actual("2026-01-03T00:00:00Z", "2026-01-03T00:30:00Z", 1000),
+            actual("2026-01-03T01:00:00Z", "2026-01-03T01:30:00Z", 1000),
+            actual("2026-01-03T02:00:00Z", "2026-01-03T02:30:00Z", 1000),
+        ],
+    )
+
+    body = get_accuracy(client, "2026-01-02")
+    period = body["period"]
+
+    assert body["day"]["metrics"]["matchedPairs"] == 3
+    assert period["firstDecisionDate"] == "2026-01-01"
+    assert period["lastDecisionDate"] == "2026-01-31"
+    # Errors +300 on Jan 2 and 0, 0, -100 on Jan 3. Averaging the two daily
+    # MAEs would give 166.7 MW instead.
+    assert period["metrics"] == {
+        "matchedPairs": 4,
+        "mae": 100,
+        "bias": 50,
+        "rmse": pytest.approx(158.113883),
+    }
+    assert period["coverage"]["hourlyForecastTargets"] == 744
+    assert period["coverage"]["forecast"]["selected"] == 4
+    assert period["coverage"]["matchedPairs"] == 4
+    assert period["coverage"]["halfHourActualTimeline"]["targets"] == 1488
+    assert period["coverage"]["halfHourActualTimeline"]["selected"] == 4
+
+
+def test_period_without_valid_pairs_is_insufficient_data(client_for):
+    period = get_accuracy(client_for([], []))["period"]
+
+    assert period["metrics"] == {
+        "matchedPairs": 0,
+        "mae": None,
+        "bias": None,
+        "rmse": None,
+    }
