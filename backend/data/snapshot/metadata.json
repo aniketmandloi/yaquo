@@ -1,0 +1,29 @@
+{
+  "retrievedAt": "2026-10-25T18:09:47+00:00",
+  "datasets": {
+    "WINDFOR": {
+      "file": "windfor.json",
+      "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/WINDFOR/stream?publishDateTimeFrom=2026-01-01T00%3A00%3A00Z&publishDateTimeTo=2026-02-01T00%3A00%3A00Z",
+      "publishDateTimeFrom": "2026-01-01T00:00:00Z",
+      "publishDateTimeTo": "2026-02-01T00:00:00Z",
+      "responseBytes": 2039857,
+      "responseSha256": "94550bb536c188b9dde70d2532d209e5087e75f02c11e38f0ccc3a5e80ea2f53",
+      "responseRecords": 18104,
+      "transformation": "None; all returned records are stored unchanged.",
+      "storedRecords": 18104,
+      "storedSha256": "94550bb536c188b9dde70d2532d209e5087e75f02c11e38f0ccc3a5e80ea2f53"
+    },
+    "FUELHH": {
+      "file": "fuelhh_wind.json",
+      "url": "https://data.elexon.co.uk/bmrs/api/v1/datasets/FUELHH/stream?publishDateTimeFrom=2026-01-02T00%3A00%3A00Z&publishDateTimeTo=2026-02-03T00%3A00%3A00Z",
+      "publishDateTimeFrom": "2026-01-02T00:00:00Z",
+      "publishDateTimeTo": "2026-02-03T00:00:00Z",
+      "responseBytes": 5574049,
+      "responseSha256": "e76ee2bf7e4051a5e743cc66ec2cf3ad97eefdd9e212d80b862a55ec7e9bf6d4",
+      "responseRecords": 30740,
+      "transformation": "Records kept only where fuelType == \"WIND\"; kept records are stored unchanged.",
+      "storedRecords": 1537,
+      "storedSha256": "5563f060bfaa6139dc054d58d014cc086dec49b432fa78bca1fd403a8a1691f9"
+    }
+  }
+}
