@@ -1,4 +1,5 @@
 import ForecastView from './ForecastView'
+import SnapshotProvenance from './SnapshotProvenance'
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
           </li>
         </ul>
       </section>
+      <SnapshotProvenance />
     </main>
   )
 }

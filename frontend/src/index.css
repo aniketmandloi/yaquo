@@ -109,3 +109,8 @@ td {
   text-align: left;
   white-space: nowrap;
 }
+
+.hash {
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
