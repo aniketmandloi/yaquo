@@ -183,3 +183,15 @@ def test_snapshot_provenance_is_exposed(client_for):
     client = client_for([])
 
     assert client.get("/api/snapshot").json() == {"retrievedAt": "x"}
+
+
+@pytest.mark.parametrize("values", [[1, True], [True, 1], [0, False], [False, 0]])
+def test_boolean_and_number_at_latest_key_conflict_in_any_order(client_for, values):
+    client = client_for(
+        [forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", v) for v in values]
+    )
+
+    targets = get_targets(client)
+
+    assert targets["2026-01-16T00:00:00+00:00"]["status"] == "conflicting"
+    assert targets["2026-01-16T00:00:00+00:00"]["generation"] is None

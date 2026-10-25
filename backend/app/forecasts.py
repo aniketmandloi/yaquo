@@ -22,6 +22,11 @@ def is_valid_generation(value: object) -> bool:
     )
 
 
+def same_value(a: object, b: object) -> bool:
+    # Python treats True == 1, which would let a duplicate hide an invalid value.
+    return isinstance(a, bool) == isinstance(b, bool) and a == b
+
+
 def utc_text(instant: datetime) -> str:
     return instant.astimezone(UTC).isoformat()
 
@@ -67,7 +72,7 @@ def decision_forecast(forecasts: list[Observation], decision_date: date) -> dict
         if day_start <= obs.start < day_end and obs.publish <= cutoff:
             latest[obs.start] = max(latest.get(obs.start, obs.publish), obs.publish)
             key_values = values.setdefault((obs.start, obs.publish), [])
-            if obs.generation not in key_values:
+            if not any(same_value(obs.generation, v) for v in key_values):
                 key_values.append(obs.generation)
 
     hourly = []
