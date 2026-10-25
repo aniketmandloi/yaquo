@@ -150,7 +150,7 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
               type="linear"
               dataKey="generation"
               name="Forecast"
-              stroke="var(--accent)"
+              stroke="var(--forecast)"
               strokeWidth={2}
               connectNulls={false}
               isAnimationActive={false}

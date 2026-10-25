@@ -261,7 +261,7 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
               type="linear"
               dataKey="forecast"
               name="Forecast at cutoff"
-              stroke="var(--accent)"
+              stroke="var(--forecast)"
               strokeWidth={2}
               connectNulls={false}
               isAnimationActive={false}
