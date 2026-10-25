@@ -1,6 +1,6 @@
 # Backend
 
-FastAPI service exposing decision-time wind forecasts from a bundled Elexon snapshot.
+FastAPI service exposing decision-time wind forecasts and their retrospective accuracy from a bundled Elexon snapshot.
 
 ## Setup
 
@@ -23,6 +23,11 @@ The frontend dev server proxies `/api` to port 8000.
 ## API
 
 - `GET /api/forecasts?decision_date=2026-01-15`: the delivery day's hourly targets with the forecast selected at the 09:00 Europe/London cutoff, its publication time and age, and data-quality counts. Dates outside 2026-01-01 to 2026-01-31 return 422.
+- `GET /api/accuracy?decision_date=2026-01-15`: the same selected forecasts compared with actual generation at identical target times, plus whole-January results. Same date rules as above.
+  - Actuals: for each target, the latest publication in the snapshot. Conflicting or invalid latest values are excluded, with no fallback to older publications. Missing values are never treated as zero.
+  - Error is forecast minus actual in MW; positive means wind was overforecast. MAE, bias (mean signed error), and RMSE use the matched pairs. They are `null` when there are none.
+  - January metrics pool every matched error from all 31 decisions rather than averaging daily scores.
+  - Coverage counts hourly forecast targets, forecast and actual statuses at those hours, matched pairs, and the half-hour actual timeline separately. Forecasts are hourly and actuals half-hourly, so half the actual timeline is never compared.
 - `GET /api/snapshot`: snapshot provenance (`data/snapshot/metadata.json`).
 
 ## Snapshot retrieval
