@@ -21,7 +21,10 @@ export default function App() {
         <DecisionPicker value={decisionDate} onChange={setDecisionDate} />
       </div>
       <ForecastView decisionDate={decisionDate} />
-      <AccuracyView decisionDate={decisionDate} />
+      <AccuracyView
+        decisionDate={decisionDate}
+        onDecisionDateChange={setDecisionDate}
+      />
       <section>
         <h2>About the data</h2>
         <ul>

@@ -18,6 +18,7 @@ import {
   type DecisionAccuracy,
   type TargetStatus,
 } from './api'
+import JanuaryStrip from './JanuaryStrip'
 import {
   formatCalendarDate,
   formatLondonDateTime,
@@ -219,7 +220,13 @@ function PairTable({ pairs }: { pairs: AccuracyPair[] }) {
   )
 }
 
-function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
+function AccuracyDetails({
+  accuracy,
+  onDecisionDateChange,
+}: {
+  accuracy: DecisionAccuracy
+  onDecisionDateChange: (decisionDate: string) => void
+}) {
   const { day, period } = accuracy
   return (
     <>
@@ -239,6 +246,12 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
           </dd>
         </div>
       </dl>
+
+      <JanuaryStrip
+        days={period.days}
+        decisionDate={accuracy.decisionDate}
+        onSelect={onDecisionDateChange}
+      />
 
       <h3>Forecast and actual wind generation ({accuracy.unit})</h3>
       <div className="chart">
@@ -305,7 +318,13 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
   )
 }
 
-export default function AccuracyView({ decisionDate }: { decisionDate: string }) {
+export default function AccuracyView({
+  decisionDate,
+  onDecisionDateChange,
+}: {
+  decisionDate: string
+  onDecisionDateChange: (decisionDate: string) => void
+}) {
   const [result, setResult] = useState<Result | null>(null)
   const state = result?.decisionDate === decisionDate ? result : null
 
@@ -347,7 +366,12 @@ export default function AccuracyView({ decisionDate }: { decisionDate: string })
           Could not load accuracy: {state.message}
         </p>
       )}
-      {state?.kind === 'ready' && <AccuracyDetails accuracy={state.accuracy} />}
+      {state?.kind === 'ready' && (
+        <AccuracyDetails
+          accuracy={state.accuracy}
+          onDecisionDateChange={onDecisionDateChange}
+        />
+      )}
     </section>
   )
 }
