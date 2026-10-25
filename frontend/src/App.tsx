@@ -1,3 +1,4 @@
+import AccuracyView from './AccuracyView'
 import ForecastView from './ForecastView'
 import SnapshotProvenance from './SnapshotProvenance'
 
@@ -8,10 +9,12 @@ export default function App() {
         <h1>Wind Procurement Pilot</h1>
         <p>
           Historical view of Elexon GB wind forecasts available for day-ahead
-          purchase decisions in January 2026.
+          purchase decisions in January 2026, and how accurate they turned out
+          to be.
         </p>
       </header>
       <ForecastView />
+      <AccuracyView />
       <section>
         <h2>About the data</h2>
         <ul>
