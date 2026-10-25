@@ -178,6 +178,17 @@ main > section.hindsight {
   cursor: default;
 }
 
+.results[aria-busy='true'] {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .results[aria-busy='true'] {
+    transition: none;
+  }
+}
+
 .facts {
   display: flex;
   flex-wrap: wrap;

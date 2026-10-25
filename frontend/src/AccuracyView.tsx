@@ -326,7 +326,9 @@ export default function AccuracyView({
   onDecisionDateChange: (decisionDate: string) => void
 }) {
   const [result, setResult] = useState<Result | null>(null)
-  const state = result?.decisionDate === decisionDate ? result : null
+  // Earlier results stay on screen, dimmed, so the page keeps its height
+  // and scroll position while the next date loads.
+  const loading = result?.decisionDate !== decisionDate
 
   useEffect(() => {
     let current = true
@@ -360,17 +362,21 @@ export default function AccuracyView({
         settlement data, and later corrections may exist. Scores do not imply
         procurement volumes or financial savings.
       </p>
-      {state === null && <p role="status">Loading accuracy…</p>}
-      {state?.kind === 'error' && (
+      {(result === null || (loading && result.kind === 'error')) && (
+        <p role="status">Loading accuracy…</p>
+      )}
+      {!loading && result?.kind === 'error' && (
         <p role="alert" className="error">
-          Could not load accuracy: {state.message}
+          Could not load accuracy: {result.message}
         </p>
       )}
-      {state?.kind === 'ready' && (
-        <AccuracyDetails
-          accuracy={state.accuracy}
-          onDecisionDateChange={onDecisionDateChange}
-        />
+      {result?.kind === 'ready' && (
+        <div className="results" aria-busy={loading}>
+          <AccuracyDetails
+            accuracy={result.accuracy}
+            onDecisionDateChange={onDecisionDateChange}
+          />
+        </div>
       )}
     </section>
   )

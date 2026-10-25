@@ -166,7 +166,9 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
 
 export default function ForecastView({ decisionDate }: { decisionDate: string }) {
   const [result, setResult] = useState<Result | null>(null)
-  const state = result?.decisionDate === decisionDate ? result : null
+  // Earlier results stay on screen, dimmed, so the page keeps its height
+  // and scroll position while the next date loads.
+  const loading = result?.decisionDate !== decisionDate
 
   useEffect(() => {
     let current = true
@@ -195,13 +197,19 @@ export default function ForecastView({ decisionDate }: { decisionDate: string })
         never used. The 09:00 cutoff is a pilot assumption, not an exchange
         auction deadline.
       </p>
-      {state === null && <p role="status">Loading forecast…</p>}
-      {state?.kind === 'error' && (
+      {(result === null || (loading && result.kind === 'error')) && (
+        <p role="status">Loading forecast…</p>
+      )}
+      {!loading && result?.kind === 'error' && (
         <p role="alert" className="error">
-          Could not load the forecast: {state.message}
+          Could not load the forecast: {result.message}
         </p>
       )}
-      {state?.kind === 'ready' && <ForecastDetails forecast={state.forecast} />}
+      {result?.kind === 'ready' && (
+        <div className="results" aria-busy={loading}>
+          <ForecastDetails forecast={result.forecast} />
+        </div>
+      )}
     </section>
   )
 }
