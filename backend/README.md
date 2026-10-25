@@ -27,6 +27,7 @@ The frontend dev server proxies `/api` to port 8000.
   - Actuals: for each target, the latest publication in the snapshot. Conflicting or invalid latest values are excluded, with no fallback to older publications. Missing values are never treated as zero.
   - Error is forecast minus actual in MW; positive means wind was overforecast. MAE, bias (mean signed error), and RMSE use the matched pairs. They are `null` when there are none.
   - January metrics pool every matched error from all 31 decisions rather than averaging daily scores.
+  - `period.days` lists each decision's delivery date and daily metrics, in date order.
   - Coverage counts hourly forecast targets, forecast and actual statuses at those hours, matched pairs, and the half-hour actual timeline separately. Forecasts are hourly and actuals half-hourly, so half the actual timeline is never compared.
 - `GET /api/snapshot`: snapshot provenance (`data/snapshot/metadata.json`).
 

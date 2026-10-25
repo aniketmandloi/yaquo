@@ -258,6 +258,39 @@ def test_period_metrics_pool_every_matched_error_across_january(client_for):
     assert period["coverage"]["halfHourActualTimeline"]["selected"] == 4
 
 
+def test_period_lists_each_decision_days_metrics(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-02T00:00:00Z", "2026-01-01T07:30:00Z", 1300),
+            forecast("2026-01-03T00:00:00Z", "2026-01-02T07:30:00Z", 1000),
+            forecast("2026-01-03T01:00:00Z", "2026-01-02T07:30:00Z", 900),
+        ],
+        [
+            actual("2026-01-02T00:00:00Z", "2026-01-02T00:30:00Z", 1000),
+            actual("2026-01-03T00:00:00Z", "2026-01-03T00:30:00Z", 1000),
+            actual("2026-01-03T01:00:00Z", "2026-01-03T01:30:00Z", 1000),
+        ],
+    )
+
+    days = get_accuracy(client)["period"]["days"]
+
+    assert len(days) == 31
+    assert days[0] == {
+        "decisionDate": "2026-01-01",
+        "deliveryDate": "2026-01-02",
+        "metrics": {"matchedPairs": 1, "mae": 300, "bias": 300, "rmse": 300},
+    }
+    assert days[1]["metrics"] == {
+        "matchedPairs": 2,
+        "mae": 50,
+        "bias": -50,
+        "rmse": pytest.approx(70.710678),
+    }
+    assert days[30]["decisionDate"] == "2026-01-31"
+    assert days[30]["deliveryDate"] == "2026-02-01"
+    assert days[30]["metrics"]["mae"] is None
+
+
 def test_period_without_valid_pairs_is_insufficient_data(client_for):
     period = get_accuracy(client_for([], []))["period"]
 
