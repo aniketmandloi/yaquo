@@ -25,6 +25,8 @@ import {
   formatLondonTime,
 } from './time'
 
+const AXIS_TICK = { fill: 'var(--muted)', fontSize: 12 }
+
 const STATUS_LABELS: Record<TargetStatus, string> = {
   selected: 'Selected',
   missing: 'Missing',
@@ -257,25 +259,36 @@ function AccuracyDetails({
       <div className="chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={day.pairs} margin={{ left: 16, right: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="var(--line)" />
             <XAxis
               dataKey="startTime"
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={formatLondonTime}
-              label={{ value: 'Target time (London)', position: 'insideBottom', offset: -4 }}
+              label={{
+                value: 'Target time (London)',
+                position: 'insideBottom',
+                offset: -4,
+                fill: 'var(--muted)',
+              }}
               height={48}
             />
             <YAxis
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={(v: number) => mw.format(v)}
-              label={{ value: 'MW', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'MW', angle: -90, position: 'insideLeft', fill: 'var(--muted)' }}
             />
             <Tooltip content={PairTooltip} />
-            <Legend verticalAlign="top" />
+            <Legend verticalAlign="top" wrapperStyle={{ fontSize: 14 }} />
             <Line
               type="linear"
               dataKey="forecast"
               name="Forecast at cutoff"
               stroke="var(--forecast)"
               strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -286,6 +299,8 @@ function AccuracyDetails({
               stroke="var(--actual)"
               strokeWidth={2}
               strokeDasharray="6 3"
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />

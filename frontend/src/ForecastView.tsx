@@ -17,6 +17,8 @@ import {
   formatLondonTime,
 } from './time'
 
+const AXIS_TICK = { fill: 'var(--muted)', fontSize: 12 }
+
 const STATUS_LABELS: Record<ForecastTarget['status'], string> = {
   selected: 'Selected',
   missing: 'Missing: no forecast published by the cutoff',
@@ -133,16 +135,25 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
       <div className="chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={forecast.targets} margin={{ left: 16, right: 16 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="var(--line)" />
             <XAxis
               dataKey="startTime"
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={formatLondonTime}
-              label={{ value: 'Target time (London)', position: 'insideBottom', offset: -4 }}
+              label={{
+                value: 'Target time (London)',
+                position: 'insideBottom',
+                offset: -4,
+                fill: 'var(--muted)',
+              }}
               height={48}
             />
             <YAxis
+              tick={AXIS_TICK}
+              stroke="var(--line)"
               tickFormatter={(v: number) => v.toLocaleString('en-GB')}
-              label={{ value: 'MW', angle: -90, position: 'insideLeft' }}
+              label={{ value: 'MW', angle: -90, position: 'insideLeft', fill: 'var(--muted)' }}
             />
             <Tooltip content={TargetTooltip} />
             <Line
@@ -151,6 +162,8 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
               name="Forecast"
               stroke="var(--forecast)"
               strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
               connectNulls={false}
               isAnimationActive={false}
             />
