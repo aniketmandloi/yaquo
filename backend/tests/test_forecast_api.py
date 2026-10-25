@@ -65,3 +65,35 @@ def test_selects_latest_publication_at_or_before_cutoff_per_target(client_for):
     }
     assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 400
     assert targets["2026-01-16T01:00:00+00:00"]["ageMinutes"] == 90
+
+
+def test_reports_hourly_targets_without_eligible_forecast_as_missing(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-16T05:00:00Z", "2026-01-15T07:30:00Z", 100),
+            forecast("2026-01-16T06:00:00Z", "2026-01-15T09:30:00Z", 200),
+            forecast("2026-01-15T23:00:00Z", "2026-01-15T07:30:00Z", 300),
+            forecast("2026-01-17T00:00:00Z", "2026-01-15T07:30:00Z", 400),
+        ]
+    )
+
+    body = client.get("/api/forecasts", params={"decision_date": "2026-01-15"}).json()
+    targets = {row["startTime"]: row for row in body["targets"]}
+
+    assert len(targets) == 24
+    assert min(targets) == "2026-01-16T00:00:00+00:00"
+    assert max(targets) == "2026-01-16T23:00:00+00:00"
+    assert targets["2026-01-16T06:00:00+00:00"] == {
+        "startTime": "2026-01-16T06:00:00+00:00",
+        "status": "missing",
+        "generation": None,
+        "publishTime": None,
+        "ageMinutes": None,
+    }
+    assert body["quality"] == {
+        "expectedHourlyTargets": 24,
+        "selected": 1,
+        "missing": 23,
+        "conflicting": 0,
+        "invalid": 0,
+    }
