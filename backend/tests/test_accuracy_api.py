@@ -267,3 +267,39 @@ def test_period_without_valid_pairs_is_insufficient_data(client_for):
         "bias": None,
         "rmse": None,
     }
+
+
+def test_accuracy_uses_the_forecast_view_selection(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", 1000),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T09:30:00Z", 1200),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 900),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 950),
+        ],
+        [actual("2026-01-16T00:00:00Z", "2026-01-16T00:30:00Z", 1200)],
+    )
+
+    view = client.get("/api/forecasts", params={"decision_date": "2026-01-15"}).json()
+    body = get_accuracy(client)
+
+    assert [
+        (p["startTime"], p["forecast"], p["forecastStatus"], p["forecastPublishTime"])
+        for p in body["day"]["pairs"]
+    ] == [
+        (t["startTime"], t["generation"], t["status"], t["publishTime"])
+        for t in view["targets"]
+    ]
+    assert pairs_by_start(body)["2026-01-16T00:00:00+00:00"]["error"] == -200
+
+
+@pytest.mark.parametrize("decision_date", ["2025-12-31", "2026-02-01", "nope"])
+def test_accuracy_rejects_unsupported_decision_dates(client_for, decision_date):
+    client = client_for([], [])
+
+    response = client.get("/api/accuracy", params={"decision_date": decision_date})
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "decision_date must be a date from 2026-01-01 to 2026-01-31"
+    }
