@@ -124,3 +124,23 @@ def test_conflicting_latest_key_is_excluded_without_older_fallback(client_for):
     assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 130
     assert body["quality"]["conflicting"] == 1
     assert body["quality"]["selected"] == 1
+
+
+@pytest.mark.parametrize("bad_value", [None, "1200", True, [1], float("nan")])
+def test_invalid_latest_value_is_excluded_without_older_fallback(client_for, bad_value):
+    client = client_for(
+        [
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T04:30:00Z", 100),
+            forecast("2026-01-16T00:00:00Z", "2026-01-15T07:30:00Z", bad_value),
+            forecast("2026-01-16T01:00:00Z", "2026-01-15T07:30:00Z", 0),
+        ]
+    )
+
+    body = client.get("/api/forecasts", params={"decision_date": "2026-01-15"}).json()
+    targets = {row["startTime"]: row for row in body["targets"]}
+
+    assert targets["2026-01-16T00:00:00+00:00"]["status"] == "invalid"
+    assert targets["2026-01-16T00:00:00+00:00"]["generation"] is None
+    assert targets["2026-01-16T01:00:00+00:00"]["status"] == "selected"
+    assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 0
+    assert body["quality"]["invalid"] == 1

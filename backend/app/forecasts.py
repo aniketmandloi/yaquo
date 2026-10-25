@@ -1,3 +1,4 @@
+import math
 from datetime import UTC, date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -9,6 +10,14 @@ CUTOFF_TIME = time(9, 0)
 
 def london_midnight(day: date) -> datetime:
     return datetime.combine(day, time(0, 0), LONDON).astimezone(UTC)
+
+
+def is_valid_generation(value: object) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
 
 
 def utc_text(instant: datetime) -> str:
@@ -26,13 +35,15 @@ def missing_target(start: datetime) -> dict:
 
 
 def selected_target(
-    start: datetime, publish: datetime, generations: set, cutoff: datetime
+    start: datetime, publish: datetime, generations: list, cutoff: datetime
 ) -> dict:
-    # A conflicting latest key is reported, never replaced by an older forecast.
+    # An unusable latest key is reported, never replaced by an older forecast.
     if len(generations) > 1:
         status, generation = "conflicting", None
+    elif not is_valid_generation(generations[0]):
+        status, generation = "invalid", None
     else:
-        status, generation = "selected", next(iter(generations))
+        status, generation = "selected", generations[0]
     return {
         "startTime": utc_text(start),
         "status": status,
@@ -49,11 +60,13 @@ def decision_forecast(forecasts: list[Observation], decision_date: date) -> dict
     day_end = london_midnight(delivery_date + timedelta(days=1))
 
     latest: dict[datetime, datetime] = {}
-    values: dict[tuple[datetime, datetime], set] = {}
+    values: dict[tuple[datetime, datetime], list] = {}
     for obs in forecasts:
         if day_start <= obs.start < day_end and obs.publish <= cutoff:
             latest[obs.start] = max(latest.get(obs.start, obs.publish), obs.publish)
-            values.setdefault((obs.start, obs.publish), set()).add(obs.generation)
+            key_values = values.setdefault((obs.start, obs.publish), [])
+            if obs.generation not in key_values:
+                key_values.append(obs.generation)
 
     hourly = []
     start = day_start
