@@ -6,6 +6,8 @@ from app.snapshot import Observation
 
 LONDON = ZoneInfo("Europe/London")
 CUTOFF_TIME = time(9, 0)
+FIRST_DECISION_DATE = date(2026, 1, 1)
+LAST_DECISION_DATE = date(2026, 1, 31)
 
 
 def london_midnight(day: date) -> datetime:

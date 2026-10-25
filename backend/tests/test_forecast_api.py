@@ -144,3 +144,36 @@ def test_invalid_latest_value_is_excluded_without_older_fallback(client_for, bad
     assert targets["2026-01-16T01:00:00+00:00"]["status"] == "selected"
     assert targets["2026-01-16T01:00:00+00:00"]["generation"] == 0
     assert body["quality"]["invalid"] == 1
+
+
+def test_first_and_last_january_decisions_cover_their_delivery_days(client_for):
+    client = client_for(
+        [
+            forecast("2026-01-02T00:00:00Z", "2026-01-01T07:30:00Z", 100),
+            forecast("2026-02-01T23:00:00Z", "2026-01-31T07:30:00Z", 200),
+        ]
+    )
+
+    first = client.get("/api/forecasts", params={"decision_date": "2026-01-01"}).json()
+    last = client.get("/api/forecasts", params={"decision_date": "2026-01-31"}).json()
+
+    assert first["deliveryDate"] == "2026-01-02"
+    assert first["targets"][0]["startTime"] == "2026-01-02T00:00:00+00:00"
+    assert first["targets"][0]["generation"] == 100
+    assert last["deliveryDate"] == "2026-02-01"
+    assert last["targets"][-1]["startTime"] == "2026-02-01T23:00:00+00:00"
+    assert last["targets"][-1]["generation"] == 200
+
+
+@pytest.mark.parametrize(
+    "decision_date", ["2025-12-31", "2026-02-01", "2026-01-32", "January 5", ""]
+)
+def test_unsupported_decision_dates_are_rejected(client_for, decision_date):
+    client = client_for([])
+
+    response = client.get("/api/forecasts", params={"decision_date": decision_date})
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "decision_date must be a date from 2026-01-01 to 2026-01-31"
+    }
