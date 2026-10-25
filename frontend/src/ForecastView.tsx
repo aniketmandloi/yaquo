@@ -11,7 +11,6 @@ import {
 } from 'recharts'
 import { fetchForecast, type DecisionForecast, type ForecastTarget } from './api'
 import {
-  DECISION_DATES,
   formatAge,
   formatCalendarDate,
   formatLondonDateTime,
@@ -165,8 +164,7 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
   )
 }
 
-export default function ForecastView() {
-  const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
+export default function ForecastView({ decisionDate }: { decisionDate: string }) {
   const [result, setResult] = useState<Result | null>(null)
   const state = result?.decisionDate === decisionDate ? result : null
 
@@ -196,20 +194,6 @@ export default function ForecastView() {
         never used. The 09:00 cutoff is a pilot assumption, not an exchange
         auction deadline.
       </p>
-      <label className="picker">
-        Decision date{' '}
-        <select
-          value={decisionDate}
-          onChange={(e) => setDecisionDate(e.target.value)}
-        >
-          {DECISION_DATES.map((d) => (
-            <option key={d} value={d}>
-              {formatCalendarDate(d)}
-            </option>
-          ))}
-        </select>
-      </label>
-
       {state === null && <p role="status">Loading forecast…</p>}
       {state?.kind === 'error' && (
         <p role="alert" className="error">

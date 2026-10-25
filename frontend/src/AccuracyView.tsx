@@ -19,7 +19,6 @@ import {
   type TargetStatus,
 } from './api'
 import {
-  DECISION_DATES,
   formatCalendarDate,
   formatLondonDateTime,
   formatLondonTime,
@@ -305,8 +304,7 @@ function AccuracyDetails({ accuracy }: { accuracy: DecisionAccuracy }) {
   )
 }
 
-export default function AccuracyView() {
-  const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
+export default function AccuracyView({ decisionDate }: { decisionDate: string }) {
   const [result, setResult] = useState<Result | null>(null)
   const state = result?.decisionDate === decisionDate ? result : null
 
@@ -341,20 +339,6 @@ export default function AccuracyView() {
         settlement data, and later corrections may exist. Scores do not imply
         procurement volumes or financial savings.
       </p>
-      <label className="picker">
-        Decision date{' '}
-        <select
-          value={decisionDate}
-          onChange={(e) => setDecisionDate(e.target.value)}
-        >
-          {DECISION_DATES.map((d) => (
-            <option key={d} value={d}>
-              {formatCalendarDate(d)}
-            </option>
-          ))}
-        </select>
-      </label>
-
       {state === null && <p role="status">Loading accuracy…</p>}
       {state?.kind === 'error' && (
         <p role="alert" className="error">

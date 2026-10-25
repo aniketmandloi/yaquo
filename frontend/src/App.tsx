@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import AccuracyView from './AccuracyView'
+import DecisionPicker from './DecisionPicker'
 import ForecastView from './ForecastView'
 import SnapshotProvenance from './SnapshotProvenance'
+import { DECISION_DATES } from './time'
 
 export default function App() {
+  const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
   return (
     <main>
       <header>
@@ -13,8 +17,11 @@ export default function App() {
           to be.
         </p>
       </header>
-      <ForecastView />
-      <AccuracyView />
+      <div className="toolbar">
+        <DecisionPicker value={decisionDate} onChange={setDecisionDate} />
+      </div>
+      <ForecastView decisionDate={decisionDate} />
+      <AccuracyView decisionDate={decisionDate} />
       <section>
         <h2>About the data</h2>
         <ul>
