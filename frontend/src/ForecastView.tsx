@@ -11,16 +11,12 @@ import {
 } from 'recharts'
 import { fetchForecast, type DecisionForecast, type ForecastTarget } from './api'
 import {
+  DECISION_DATES,
   formatAge,
   formatCalendarDate,
   formatLondonDateTime,
   formatLondonTime,
 } from './time'
-
-const DECISION_DATES = Array.from(
-  { length: 31 },
-  (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`,
-)
 
 const STATUS_LABELS: Record<ForecastTarget['status'], string> = {
   selected: 'Selected',

@@ -14,6 +14,15 @@ def london_midnight(day: date) -> datetime:
     return datetime.combine(day, time(0, 0), LONDON).astimezone(UTC)
 
 
+def target_starts(day_start: datetime, day_end: datetime, step: timedelta) -> list:
+    starts = []
+    start = day_start
+    while start < day_end:
+        starts.append(start)
+        start += step
+    return starts
+
+
 def is_valid_generation(value: object) -> bool:
     return (
         isinstance(value, (int, float))
@@ -41,16 +50,35 @@ def missing_target(start: datetime) -> dict:
     }
 
 
+def classify(generations: list) -> tuple[str, object]:
+    # An unusable latest key is reported, never replaced by an older value.
+    if len(generations) > 1:
+        return "conflicting", None
+    if not is_valid_generation(generations[0]):
+        return "invalid", None
+    return "selected", generations[0]
+
+
+def latest_by_target(
+    observations: list[Observation], keep
+) -> dict[datetime, tuple[datetime, list]]:
+    latest: dict[datetime, datetime] = {}
+    values: dict[tuple[datetime, datetime], list] = {}
+    for obs in observations:
+        if keep(obs):
+            latest[obs.start] = max(latest.get(obs.start, obs.publish), obs.publish)
+            key_values = values.setdefault((obs.start, obs.publish), [])
+            if not any(same_value(obs.generation, v) for v in key_values):
+                key_values.append(obs.generation)
+    return {
+        start: (publish, values[start, publish]) for start, publish in latest.items()
+    }
+
+
 def selected_target(
     start: datetime, publish: datetime, generations: list, cutoff: datetime
 ) -> dict:
-    # An unusable latest key is reported, never replaced by an older forecast.
-    if len(generations) > 1:
-        status, generation = "conflicting", None
-    elif not is_valid_generation(generations[0]):
-        status, generation = "invalid", None
-    else:
-        status, generation = "selected", generations[0]
+    status, generation = classify(generations)
     return {
         "startTime": utc_text(start),
         "status": status,
@@ -66,30 +94,18 @@ def decision_forecast(forecasts: list[Observation], decision_date: date) -> dict
     day_start = london_midnight(delivery_date)
     day_end = london_midnight(delivery_date + timedelta(days=1))
 
-    latest: dict[datetime, datetime] = {}
-    values: dict[tuple[datetime, datetime], list] = {}
-    for obs in forecasts:
-        if day_start <= obs.start < day_end and obs.publish <= cutoff:
-            latest[obs.start] = max(latest.get(obs.start, obs.publish), obs.publish)
-            key_values = values.setdefault((obs.start, obs.publish), [])
-            if not any(same_value(obs.generation, v) for v in key_values):
-                key_values.append(obs.generation)
-
-    hourly = []
-    start = day_start
-    while start < day_end:
-        hourly.append(start)
-        start += timedelta(hours=1)
+    latest = latest_by_target(
+        forecasts,
+        lambda obs: day_start <= obs.start < day_end and obs.publish <= cutoff,
+    )
+    hourly = target_starts(day_start, day_end, timedelta(hours=1))
 
     targets = []
     for start in sorted(set(hourly) | set(latest)):
-        publish = latest.get(start)
-        if publish is None:
+        if start not in latest:
             targets.append(missing_target(start))
         else:
-            targets.append(
-                selected_target(start, publish, values[start, publish], cutoff)
-            )
+            targets.append(selected_target(start, *latest[start], cutoff))
 
     statuses = [target["status"] for target in targets]
     quality = {

@@ -24,6 +24,54 @@ export interface DecisionForecast {
   }
 }
 
+export type StatusCounts = Record<TargetStatus, number>
+
+export interface AccuracyPair {
+  startTime: string
+  forecast: number | null
+  forecastStatus: TargetStatus
+  forecastPublishTime: string | null
+  actual: number | null
+  actualStatus: TargetStatus
+  actualPublishTime: string | null
+  error: number | null
+}
+
+// Metric values are null when there are no matched pairs.
+export interface AccuracyMetrics {
+  matchedPairs: number
+  mae: number | null
+  bias: number | null
+  rmse: number | null
+}
+
+export interface AccuracyCoverage {
+  hourlyForecastTargets: number
+  forecast: StatusCounts
+  actualAtHourlyTargets: StatusCounts
+  matchedPairs: number
+  halfHourActualTimeline: StatusCounts & { targets: number }
+}
+
+export interface DecisionAccuracy {
+  decisionDate: string
+  deliveryDate: string
+  cutoff: string
+  timezone: string
+  unit: string
+  day: {
+    pairs: AccuracyPair[]
+    metrics: AccuracyMetrics
+    coverage: AccuracyCoverage
+  }
+  period: {
+    firstDecisionDate: string
+    lastDecisionDate: string
+    metrics: AccuracyMetrics
+    coverage: AccuracyCoverage
+  }
+}
+
 export interface DatasetProvenance {
   file: string
   url: string
@@ -54,6 +102,11 @@ async function getJson<T>(path: string): Promise<T> {
 export function fetchForecast(decisionDate: string): Promise<DecisionForecast> {
   const query = new URLSearchParams({ decision_date: decisionDate })
   return getJson(`/api/forecasts?${query}`)
+}
+
+export function fetchAccuracy(decisionDate: string): Promise<DecisionAccuracy> {
+  const query = new URLSearchParams({ decision_date: decisionDate })
+  return getJson(`/api/accuracy?${query}`)
 }
 
 export function fetchSnapshot(): Promise<SnapshotProvenance> {

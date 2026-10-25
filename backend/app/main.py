@@ -4,7 +4,13 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 
-from app.forecasts import FIRST_DECISION_DATE, LAST_DECISION_DATE, decision_forecast
+from app.accuracy import decision_accuracy, period_accuracy
+from app.forecasts import (
+    FIRST_DECISION_DATE,
+    LAST_DECISION_DATE,
+    decision_forecast,
+    latest_by_target,
+)
 from app.snapshot import load_observations
 
 
@@ -24,12 +30,22 @@ def parse_decision_date(value: str) -> date:
 
 def create_app(snapshot_dir: Path) -> FastAPI:
     forecasts = load_observations(snapshot_dir / "windfor.json")
+    # Every retrieved actual is eligible: they are scored only in hindsight.
+    actuals = latest_by_target(
+        load_observations(snapshot_dir / "fuelhh_wind.json"), lambda obs: True
+    )
     metadata = json.loads((snapshot_dir / "metadata.json").read_text())
+    period = period_accuracy(forecasts, actuals)
     app = FastAPI(title="Wind procurement pilot")
 
     @app.get("/api/forecasts")
     def get_forecasts(decision_date: str) -> dict:
         return decision_forecast(forecasts, parse_decision_date(decision_date))
+
+    @app.get("/api/accuracy")
+    def get_accuracy(decision_date: str) -> dict:
+        day = decision_accuracy(forecasts, actuals, parse_decision_date(decision_date))
+        return {**day, "period": period}
 
     @app.get("/api/snapshot")
     def get_snapshot() -> dict:

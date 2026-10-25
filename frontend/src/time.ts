@@ -1,3 +1,8 @@
+export const DECISION_DATES = Array.from(
+  { length: 31 },
+  (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`,
+)
+
 const londonDateTime = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/London',
   day: 'numeric',
