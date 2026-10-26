@@ -1,33 +1,25 @@
 # Wind Procurement Pilot
 
-A web app for a UK utility's day-ahead procurement team. For each January 2026 purchase decision it shows the Elexon wind generation forecast that was available at the decision time, and how accurate that forecast turned out to be against actual generation.
+A pilot for a UK utility's day-ahead procurement team. For each January 2026 purchase decision, it shows the Elexon wind generation forecast that was available at 09:00 London time on the decision day, and how accurate that forecast turned out to be against actual generation.
 
-- **Hosted app:** not deployed yet.
-- **Video walkthrough:** not recorded yet.
-
-## What it shows
-
-1. **Day-ahead forecast (as of the decision).** Pick a decision date from January 1 to 31, 2026, in the bar at the top; it drives both views. The app shows the next day's hourly wind forecast as it stood at 09:00 Europe/London on the decision date, with each value's publication time and age at the cutoff.
-2. **Retrospective accuracy.** The same selected forecasts compared with actual generation at identical target times, with MAE, mean signed error (bias) and RMSE in MW for the chosen day and for the whole of January. A strip of all 31 decision dates shows each day's bias; clicking one selects that date.
-
-## Directories
-
-| Path | Contents |
+| | |
 | --- | --- |
-| `backend/app/` | FastAPI service. `forecasts.py` selects forecasts at the decision cutoff, `accuracy.py` matches them with actuals and computes metrics, `snapshot.py` loads the bundled data, `main.py` defines the API and serves the built frontend, `server.py` is the entry point. |
-| `backend/data/snapshot/` | Bundled Elexon WINDFOR and FUELHH WIND records, plus `metadata.json` with their provenance. The app reads only these files. |
-| `backend/scripts/fetch_snapshot.py` | Retrieves the snapshot again from the public Elexon API. |
-| `backend/tests/` | API tests against small controlled snapshots. |
-| `frontend/src/` | React app. `ForecastView.tsx` and `AccuracyView.tsx` are the two views, `DecisionPicker.tsx` is the shared date control, `JanuaryStrip.tsx` is the daily bias strip, `SnapshotProvenance.tsx` shows the data source, `api.ts` is the typed API client. |
-| `docs/` | Planning, research notes, and the video walkthrough scripts. |
-| `GLOSSARY.md` | Domain terms used across code and docs. |
-| `Dockerfile`, `heroku.yml` | One image serving the frontend and API; Heroku builds it from `heroku.yml`. |
+| **Live app** | _Not deployed yet. Add the Heroku URL here once it is live._ |
+| **Video** | _Not recorded yet. Add the unlisted YouTube link here._ |
+| **Specification** | [Issue #1](https://github.com/aniketmandloi/yaquo/issues/1) and [`docs/planning/wind-pilot-spec.md`](docs/planning/wind-pilot-spec.md) |
+| **Tickets** | [#2 forecast view](https://github.com/aniketmandloi/yaquo/issues/2), [#3 accuracy view](https://github.com/aniketmandloi/yaquo/issues/3), [#4 delivery](https://github.com/aniketmandloi/yaquo/issues/4) |
+| **Decisions** | [`docs/adr/`](docs/adr/) |
 
-## Running locally
+## What the app answers
 
-Requirements: Python 3.12 (a conda environment is provided) and Node.js 20.19+ or 22.12+.
+1. **What did we know when we decided?** Pick a decision date (1–31 January 2026). The forecast view shows the next day's hourly wind forecast as published by 09:00 London time that day. Each value shows when its forecast was published and how old it was at the cutoff. Later publications are never used, even if they would have scored better.
+2. **How wrong was it?** The accuracy view compares those same forecasts with the actual generation for the delivery day, and for all of January. It reports MAE, bias and RMSE in MW, along with coverage counts so you can see exactly which hours were compared.
 
-Backend, from `backend/`:
+## Quick start
+
+Requirements: Python 3.12 (a conda environment file is provided) and Node.js 20.19+ or 22.12+.
+
+**Backend**, from `backend/`:
 
 ```sh
 conda env create -f environment.yml
@@ -35,74 +27,127 @@ conda activate yaquo
 uvicorn app.server:app --port 8000
 ```
 
-Frontend dev server, from `frontend/` in a second terminal:
+**Frontend**, from `frontend/` in a second terminal:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the address Vite prints. It proxies `/api` to the backend on port 8000.
+Open the address Vite prints (usually http://localhost:5173). Requests to `/api` are proxied to port 8000.
 
-To serve everything from the backend instead, run `npm run build` in `frontend/` and restart the backend; it serves `frontend/dist` at http://localhost:8000 when that folder exists.
+To serve the whole app from the backend instead, build the frontend with `npm run build` and open http://localhost:8000. The backend serves `frontend/dist` whenever that folder exists.
 
-### Checks
+**Checks**
 
 ```sh
 (cd backend && pytest)
 (cd frontend && npm run lint && npm run build)
 ```
 
-## Docker
-
-From the repository root:
+**Docker** (from the repository root):
 
 ```sh
 docker build -t wind-pilot .
 docker run --rm -p 8000:8000 wind-pilot
 ```
 
-Then open http://localhost:8000. The container listens on `$PORT` (default 8000), so `docker run --rm -e PORT=5000 -p 5000:5000 wind-pilot` also works.
+The container listens on `$PORT` (default 8000). Open http://localhost:8000.
 
-## Deploying to Heroku
+**Heroku** deploys the same image from `heroku.yml`. See [`docs/adr/0006-heroku-basic-container.md`](docs/adr/0006-heroku-basic-container.md) for why.
 
-The app runs on one Heroku Basic dyno using the container stack. Heroku builds the image from `heroku.yml`:
+## Architecture
 
-```sh
-heroku create <app-name>
-heroku stack:set container --app <app-name>
-git push heroku main
-heroku ps:type web=basic --app <app-name>
+```text
+Browser (React + Vite + Recharts)
+  │  GET /api/forecasts?decision_date=…
+  │  GET /api/accuracy?decision_date=…
+  │  GET /api/snapshot
+  ▼
+FastAPI (Python)                       one process, one Docker image, one origin
+  ├─ forecasts.py   cutoff selection    the same rules feed both views
+  ├─ accuracy.py    matching + metrics  pairs only at identical target times
+  ├─ snapshot.py    loads the bundle
+  └─ main.py        API routes + serves frontend/dist (refresh-safe fallback)
+  │
+  ▼
+backend/data/snapshot/                 bundled Elexon WINDFOR + FUELHH WIND
+  ├─ windfor.json, fuelhh_wind.json    unchanged provider responses
+  └─ metadata.json                     URLs, bounds, retrieval time, SHA-256
 ```
 
-## Data and methodology
+The analysis runs only in Python. React displays what the API returns, including loading, error and "insufficient data" states. The decision rules are recorded in [`docs/adr/`](docs/adr/).
 
-**Source.** Only two Elexon datasets are used: WINDFOR (wind forecasts) and FUELHH records with `fuelType` `WIND` (actual generation). Values are Elexon-reported GB wind generation in MW. Elexon covers wind farms visible to the system operator through operational metering, not every UK wind generator.
+## Directories
 
-**Snapshot.** The app reads a bundled snapshot instead of calling Elexon on each request, so the demo does not depend on the live API. `backend/data/snapshot/metadata.json` records the query URLs and publication-time bounds, the retrieval time, record counts, SHA-256 hashes, and the one transformation applied (keeping only WIND rows from FUELHH). Run `python scripts/fetch_snapshot.py` from `backend/` to retrieve it again; see [backend/README.md](backend/README.md) for details.
+| Path | What it holds |
+| --- | --- |
+| `backend/app/` | API and analysis: cutoff selection (`forecasts.py`), matching and metrics (`accuracy.py`), snapshot loading (`snapshot.py`), routes and static serving (`main.py`), entry point (`server.py`). |
+| `backend/data/snapshot/` | The bundled Elexon data and its provenance. The app reads only these files. |
+| `backend/scripts/fetch_snapshot.py` | Retrieves the snapshot again from the public Elexon API. |
+| `backend/tests/` | API tests against small hand-built snapshots. |
+| `frontend/src/` | React views: `ForecastView.tsx`, `AccuracyView.tsx`, `JanuaryStrip.tsx`, `DecisionPicker.tsx`, `SnapshotProvenance.tsx`; typed client in `api.ts`. |
+| `docs/planning/` | The agreed scope, the specification, and the ticket breakdown. |
+| `docs/research/` | Elexon data findings and the hosting research. |
+| `docs/adr/` | Architecture decision records. |
+| `docs/delivery/` | Video walkthrough script and the manual test checklist. |
+| `GLOSSARY.md` | The domain terms used in code, UI and docs. |
+| `Dockerfile`, `.dockerignore`, `heroku.yml` | Container build and Heroku configuration. |
 
-**Decision cutoff.** Each decision date's cutoff is 09:00 Europe/London. This is a pilot assumption, not an official auction deadline. The delivery day is the following calendar day. For each hourly target in the delivery day, the app takes the latest forecast published at or before the cutoff. A later forecast is never used, even if it would score better.
+## Data and method
+
+**Sources.** Only two Elexon datasets are used: WINDFOR (wind forecasts) and FUELHH rows with `fuelType` `WIND` (actual generation). Values are Elexon-reported GB wind generation in MW. Elexon covers wind farms visible to the system operator through operational metering, not every UK wind generator or any customer portfolio.
+
+**Snapshot.** The app reads a bundled snapshot rather than calling Elexon on each request. [`backend/data/snapshot/metadata.json`](backend/data/snapshot/metadata.json) records the query URLs and publication-time bounds, the retrieval time, record counts, SHA-256 hashes, and the one transformation applied (keeping only WIND rows from FUELHH). To retrieve it again: `python scripts/fetch_snapshot.py` from `backend/`. The provider may return different data over time, so review differences before committing a new snapshot.
+
+**Cutoff.** Each decision's cutoff is 09:00 Europe/London on the decision date. This is a pilot assumption, not an official auction deadline. For each hourly target on the next calendar day, the app takes the latest forecast published at or before the cutoff. If that latest forecast is conflicting or invalid, the target is excluded. The app never falls back to an older forecast. See [ADR 0002](docs/adr/0002-latest-publication-at-cutoff.md).
 
 **Actuals.** For each half-hour target, the latest actual publication in the snapshot is used.
 
-**Matching.** Forecasts and actuals are compared only at identical target times. Forecasts are hourly and actuals half-hourly, so 24 of the 48 actuals on each delivery day are compared and the other 24 are not. Nothing is interpolated or averaged, and missing values are never treated as zero.
+**Matching.** Forecasts and actuals are compared only at identical target times. Forecasts are hourly and actuals are half-hourly, so 24 of the 48 actuals on each delivery day are compared and the others are not. Nothing is interpolated or averaged, and a missing value is never treated as zero. See [ADR 0003](docs/adr/0003-match-at-identical-target-times.md).
 
-**Metrics.** Forecast error is forecast minus actual, in MW. A positive error means wind was overforecast, which can leave a buyer short if that wind was counted as supply.
+**Metrics.** Error is forecast minus actual, in MW. A positive error means wind was overforecast, which can leave a buyer short if it was counted as supply.
 
-- MAE: the average size of the errors.
-- Bias (mean signed error): the average error, showing a tendency to over- or underforecast.
-- RMSE: the square root of the average squared error, so large misses count more.
+- **MAE:** the average size of the error, ignoring direction.
+- **Bias (mean signed error):** the average error. Positive means overforecast, negative means underforecast.
+- **RMSE:** like MAE, but larger misses count more heavily.
 
-The January figures pool every matched error from all 31 decisions rather than averaging the daily figures. When a day has no valid pairs, metrics are reported as unavailable, not zero.
+The January figures pool every matched error across all 31 decisions. They are not an average of the daily figures. See [ADR 0004](docs/adr/0004-pool-errors-for-period-metrics.md). When there are no valid pairs, a metric is reported as insufficient data, never as zero.
+
+## Results at a glance
+
+These figures come from the bundled snapshot. The app shows the full breakdown.
+
+- **January 2026, all 31 decisions:** 744 matched hourly pairs. MAE about 2,022 MW, bias about +1,746 MW, RMSE about 2,497 MW.
+- **27 of 31 decisions** had positive bias, meaning the forecast overestimated wind.
+- **Closest day:** 18 January (MAE 684 MW, bias −684 MW).
+- **Furthest day:** 27 January (MAE 5,329 MW, bias +5,329 MW).
 
 ## Limitations
 
-- Accuracy figures are retrospective. They were not known at earlier January decisions and are not a forward risk estimate.
-- Actuals are the latest within the retrieval window (publications up to 2026-02-03). Later corrections and final settlement values were not checked.
-- The snapshot showed 24 hourly forecasts and 48 half-hour actuals per delivery day, all 744 hourly targets matched. This is what the retrieved data contained, not a guarantee from Elexon.
-- Forecast publication time is used as the time a forecast became available.
-- The pilot does not include demand, prices, portfolios, purchase volumes, or financial savings, as the brief allows only the two wind datasets.
+- **Hindsight, not foresight.** The accuracy figures use outcomes that were not known at the decision time. They describe past performance and are not a forward risk estimate.
+- **Latest, not final, actuals.** Actuals are the latest values in the retrieval window (publications up to 3 February 2026). Later corrections and final settlement data were not checked.
+- **Cutoff is an assumption.** 09:00 London time is a pilot assumption, not an official auction deadline.
+- **Archive completeness is observed, not guaranteed.** All 744 hourly targets matched in this snapshot. That reflects what Elexon returned for these queries, not a provider guarantee.
+- **Scope is deliberately narrow.** The brief allows only the two wind datasets. The app does not cover demand, prices, customer portfolios, purchase volumes or financial savings.
+- **No live data.** The app serves the bundled January snapshot and does not refresh itself.
+
+## Testing
+
+- **Automated:** `pytest` in `backend/` runs 41 tests against the API and static serving. They cover cutoff equality, January boundaries, exact matching, missing and conflicting records, latest-actual selection, the three metrics against hand-worked values, pooled period metrics, and static serving.
+- **Frontend:** `npm run lint` and `npm run build` (which includes the TypeScript check).
+- **Manual:** the step-by-step checklist is in [`docs/delivery/manual-testing.md`](docs/delivery/manual-testing.md).
+
+## Decisions and history
+
+- **Specification:** [`docs/planning/wind-pilot-spec.md`](docs/planning/wind-pilot-spec.md), also published as [issue #1](https://github.com/aniketmandloi/yaquo/issues/1).
+- **Agreed scope and interview:** [`docs/planning/wind-pilot.md`](docs/planning/wind-pilot.md).
+- **Tickets:** [`docs/planning/wind-pilot-tickets.md`](docs/planning/wind-pilot-tickets.md). Delivered in [PR #5](https://github.com/aniketmandloi/yaquo/pull/5) (forecast view), [PR #6](https://github.com/aniketmandloi/yaquo/pull/6) (accuracy view), [PR #7](https://github.com/aniketmandloi/yaquo/pull/7) (packaging and delivery) and [PR #8](https://github.com/aniketmandloi/yaquo/pull/8) (UI polish).
+- **Data research:** [`docs/research/elexon-wind.md`](docs/research/elexon-wind.md).
+- **Hosting research:** [`docs/research/deployment.md`](docs/research/deployment.md).
+- **Architecture decisions:** [`docs/adr/`](docs/adr/).
+- **Domain terms:** [`GLOSSARY.md`](GLOSSARY.md).
 
 ## AI assistance
 
-This project was built with AI assistance. Claude Code (Anthropic) was used for domain and deployment research, planning, writing code, tests, and documentation. I reviewed the plans, decisions, and changes.
+This project was built with AI assistance. Claude Code (Anthropic) helped with research, planning, writing code, tests and documentation. A human reviewed each plan, decision and change, and made the final calls on scope and delivery.
