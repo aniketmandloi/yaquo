@@ -26,7 +26,7 @@ export default function JanuaryStrip({
 }) {
   const largest = Math.max(1, ...days.map((d) => Math.abs(d.metrics.bias ?? 0)))
   return (
-    <figure className="strip">
+    <figure className="strip" id="strip">
       <figcaption>
         <h3>Daily bias across January</h3>
         <p className="note">
@@ -39,6 +39,8 @@ export default function JanuaryStrip({
         {days.map((day) => {
           const bias = day.metrics.bias
           const height = bias === null ? 0 : (Math.abs(bias) / largest) * 100
+          const dayOfMonth = Number(day.decisionDate.slice(8))
+          const keyDay = dayOfMonth === 1 || dayOfMonth % 5 === 0
           return (
             <button
               key={day.decisionDate}
@@ -60,7 +62,9 @@ export default function JanuaryStrip({
                 )}
                 {bias === null && <span className="strip-none">–</span>}
               </span>
-              <span className="strip-label">{Number(day.decisionDate.slice(8))}</span>
+              <span className={keyDay ? 'strip-label key' : 'strip-label'}>
+                {dayOfMonth}
+              </span>
             </button>
           )
         })}

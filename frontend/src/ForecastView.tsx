@@ -56,7 +56,7 @@ function QualitySummary({ forecast }: { forecast: DecisionForecast }) {
   const { quality } = forecast
   const issues = forecast.targets.filter((t) => t.status !== 'selected')
   return (
-    <section>
+    <section id="quality">
       <h3>Data quality</h3>
       <p>
         {quality.selected} of {quality.expectedHourlyTargets} hourly targets
@@ -87,22 +87,24 @@ function TargetTable({ forecast }: { forecast: DecisionForecast }) {
         <thead>
           <tr>
             <th>Target (London)</th>
-            <th>Forecast (MW)</th>
+            <th className="num">Forecast (MW)</th>
             <th>Published</th>
-            <th>Age at cutoff</th>
+            <th className="num">Age at cutoff</th>
           </tr>
         </thead>
         <tbody>
           {forecast.targets.map((t) => (
             <tr key={t.startTime}>
               <td>{formatLondonTime(t.startTime)}</td>
-              <td>
+              <td className="num">
                 {t.generation === null
                   ? STATUS_LABELS[t.status]
                   : t.generation.toLocaleString('en-GB')}
               </td>
               <td>{t.publishTime ? formatLondonDateTime(t.publishTime) : '—'}</td>
-              <td>{t.ageMinutes === null ? '—' : formatAge(t.ageMinutes)}</td>
+              <td className="num">
+                {t.ageMinutes === null ? '—' : formatAge(t.ageMinutes)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -132,7 +134,7 @@ function ForecastDetails({ forecast }: { forecast: DecisionForecast }) {
       </dl>
 
       <h3>Forecast wind generation for the delivery day ({forecast.unit})</h3>
-      <div className="chart">
+      <div className="chart" id="forecast-chart">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={forecast.targets} margin={{ left: 16, right: 16 }}>
             <CartesianGrid vertical={false} stroke="var(--line)" />
@@ -201,7 +203,7 @@ export default function ForecastView({ decisionDate }: { decisionDate: string })
   }, [decisionDate])
 
   return (
-    <section className="view">
+    <section className="view" id="forecast">
       <p className="eyebrow">Known at the 09:00 cutoff</p>
       <h2>Day-ahead forecast available at the decision cutoff</h2>
       <p>
