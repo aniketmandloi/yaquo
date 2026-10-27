@@ -4,7 +4,7 @@ A pilot for a UK utility's day-ahead procurement team. For each January 2026 pur
 
 | | |
 | --- | --- |
-| **Live app** | _Not deployed yet. Add the Heroku URL here once it is live._ |
+| **Live app** | _Not deployed yet. Add the Render URL here once it is live._ |
 | **Video** | _Not recorded yet. Add the unlisted YouTube link here._ |
 | **Specification** | [Issue #1](https://github.com/aniketmandloi/yaquo/issues/1) and [`docs/planning/wind-pilot-spec.md`](docs/planning/wind-pilot-spec.md) |
 | **Tickets** | [#2 forecast view](https://github.com/aniketmandloi/yaquo/issues/2), [#3 accuracy view](https://github.com/aniketmandloi/yaquo/issues/3), [#4 delivery](https://github.com/aniketmandloi/yaquo/issues/4) |
@@ -54,7 +54,9 @@ docker run --rm -p 8000:8000 wind-pilot
 
 The container listens on `$PORT` (default 8000). Open http://localhost:8000.
 
-**Heroku** deploys the same image from `heroku.yml`. See [`docs/adr/0006-heroku-basic-container.md`](docs/adr/0006-heroku-basic-container.md) for why.
+**Render** deploys the same image from the repository's `Dockerfile`. See [`docs/adr/0008-render-free-web-service.md`](docs/adr/0008-render-free-web-service.md) for why.
+
+The free instance sleeps after 15 minutes without traffic. The first request after that can take about a minute while it restarts. Open the app shortly before reviewing it.
 
 ## Architecture
 
@@ -92,7 +94,7 @@ The analysis runs only in Python. React displays what the API returns, including
 | `docs/adr/` | Architecture decision records. |
 | `docs/delivery/` | Video walkthrough script and the manual test checklist. |
 | `GLOSSARY.md` | The domain terms used in code, UI and docs. |
-| `Dockerfile`, `.dockerignore`, `heroku.yml` | Container build and Heroku configuration. |
+| `Dockerfile`, `.dockerignore` | Container build, used by Docker and Render. |
 
 ## Data and method
 

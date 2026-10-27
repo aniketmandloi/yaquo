@@ -31,7 +31,7 @@ Figures come from the bundled snapshot. Check them on screen while recording.
 
 - React and Vite frontend, FastAPI backend. All analysis runs in Python.
 - One process and one Docker image serve both `/api` and the built frontend ([ADR 0005](../adr/0005-one-origin-python-serves-frontend.md)).
-- Heroku builds the image from `heroku.yml` onto one Basic dyno ([ADR 0006](../adr/0006-heroku-basic-container.md)).
+- Render builds the same Dockerfile into one free web service ([ADR 0008](../adr/0008-render-free-web-service.md)). Say that the first load after a quiet spell takes about a minute.
 
 **4:30–5:15 Core rules.** *Screen: `backend/app/forecasts.py`, then `accuracy.py`.*
 

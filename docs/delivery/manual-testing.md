@@ -66,8 +66,8 @@ Open each link in a browser tab. Expected results are in the right-hand column.
 
 Use a private/incognito window so cached data is not used.
 
-1. Open the Heroku URL. The app loads without signing in.
-2. Repeat sections B (replace `localhost:8000` with the Heroku host) and C and D.
+1. Open the Render URL. The first load after a quiet spell can take about a minute while the free instance restarts. The app loads without signing in.
+2. Repeat sections B (replace `localhost:8000` with the Render host) and C and D.
 3. Refresh a deep link such as `/accuracy`. The app should load, not an error page.
 4. Check on a phone or a narrow window. The date bar and metric cards should fit, and the strip stays readable (its labels shrink but stay visible).
 5. Tab through the page with the keyboard. The focus outline should be visible on the date buttons, the select, and the strip columns.
