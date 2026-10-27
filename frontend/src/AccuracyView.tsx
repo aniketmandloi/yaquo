@@ -182,9 +182,9 @@ function PairTable({ pairs }: { pairs: AccuracyPair[] }) {
         <thead>
           <tr>
             <th>Target (London)</th>
-            <th>Forecast (MW)</th>
-            <th>Actual (MW)</th>
-            <th>Error (MW)</th>
+            <th className="num">Forecast (MW)</th>
+            <th className="num">Actual (MW)</th>
+            <th className="num">Error (MW)</th>
             <th>Forecast published</th>
             <th>Actual published</th>
           </tr>
@@ -193,17 +193,19 @@ function PairTable({ pairs }: { pairs: AccuracyPair[] }) {
           {pairs.map((p) => (
             <tr key={p.startTime}>
               <td>{formatLondonTime(p.startTime)}</td>
-              <td>
+              <td className="num">
                 {p.forecast === null
                   ? STATUS_LABELS[p.forecastStatus]
                   : mw.format(p.forecast)}
               </td>
-              <td>
+              <td className="num">
                 {p.actual === null
                   ? STATUS_LABELS[p.actualStatus]
                   : mw.format(p.actual)}
               </td>
-              <td>{p.error === null ? 'Not scored' : signedMw.format(p.error)}</td>
+              <td className="num">
+                {p.error === null ? 'Not scored' : signedMw.format(p.error)}
+              </td>
               <td>
                 {p.forecastPublishTime
                   ? formatLondonDateTime(p.forecastPublishTime)
@@ -298,7 +300,6 @@ function AccuracyDetails({
               name="Actual (latest retrieved)"
               stroke="var(--actual)"
               strokeWidth={2}
-              strokeDasharray="6 3"
               dot={false}
               activeDot={{ r: 4 }}
               connectNulls={false}
@@ -313,7 +314,7 @@ function AccuracyDetails({
         never zero.
       </p>
 
-      <h3>Accuracy</h3>
+      <h3 id="metrics">Accuracy</h3>
       <MetricCards day={day.metrics} period={period.metrics} />
       <p className="note">
         The January figures pool every matched hourly error from the{' '}
@@ -363,7 +364,7 @@ export default function AccuracyView({
   }, [decisionDate])
 
   return (
-    <section className="view hindsight">
+    <section className="view hindsight" id="accuracy">
       <p className="eyebrow">Hindsight: uses outcomes after delivery</p>
       <h2>Retrospective accuracy against retrieved actuals</h2>
       <p>

@@ -39,8 +39,10 @@ Open each link in a browser tab. Expected results are in the right-hand column.
 
 ## C. Check the forecast view (screen)
 
-1. The page title is **Wind Procurement Pilot**, and the top bar has a decision date.
-2. The top bar opens on **1 January 2026**. ‹ and › step through dates. ‹ is disabled on 1 January and › is disabled on 31 January.
+The **Start walkthrough** button in the top bar steps through the main points of sections C and D inside the app. Each step moves the page to the right section and shows the result to expect there.
+
+1. The page title is **Wind Procurement Pilot**, and the date bar under the title has a decision date.
+2. The date bar opens on **1 January 2026**. ‹ and › step through dates. ‹ is disabled on 1 January and › is disabled on 31 January.
 3. The "Known at the 09:00 cutoff" label is shown above the forecast section.
 4. The line chart shows about 24 points. Axes are labelled "Target time (London)" and "MW".
 5. Hover over a point. The tooltip shows the time, the MW value, and the publication time and age before the cutoff.
@@ -49,10 +51,10 @@ Open each link in a browser tab. Expected results are in the right-hand column.
 
 ## D. Check the accuracy view (screen)
 
-1. The section is labelled **Hindsight**, with a dashed border and a tinted background.
+1. The section is labelled **Hindsight**, on a tinted background.
 2. The **January bias strip** shows 31 columns. Most bars are above the line (orange, overforecast). Hover a column to read its bias.
 3. Click 18 January in the strip. The date bar, both views and the strip highlight update to 18 January.
-4. The chart has two lines: forecast (teal) and actual (dark, dashed). Hover to see the forecast, actual and signed error for that hour.
+4. The chart has two lines: forecast (teal) and actual (dark). Hover to see the forecast, actual and signed error for that hour.
 5. The metric cards show MAE, bias and RMSE for the day, with January below each. Bias shows "overforecast" or "underforecast" beside its value.
 6. The coverage section shows "24 of 24 hourly forecast targets matched" for the day. The half-hour actual timeline shows 48 targets.
 7. Click through several dates quickly. The previous results dim while the next one loads, and the page does not jump.
