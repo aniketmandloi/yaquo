@@ -4,6 +4,7 @@ import DecisionPicker from './DecisionPicker'
 import ForecastView from './ForecastView'
 import SnapshotProvenance from './SnapshotProvenance'
 import { DECISION_DATES } from './time'
+import Walkthrough from './Walkthrough'
 
 function Mark() {
   return (
@@ -23,6 +24,7 @@ function Mark() {
 
 export default function App() {
   const [decisionDate, setDecisionDate] = useState(DECISION_DATES[0])
+  const [walkthroughOpen, setWalkthroughOpen] = useState(false)
   return (
     <div className="frame">
       <div className="topbar">
@@ -30,6 +32,15 @@ export default function App() {
           <Mark />
           Elexon GB wind · January 2026
         </p>
+        {!walkthroughOpen && (
+          <button
+            type="button"
+            className="walkthrough-start"
+            onClick={() => setWalkthroughOpen(true)}
+          >
+            Start walkthrough
+          </button>
+        )}
       </div>
       <main className="sheet">
         <div className="sheet-inner">
@@ -67,6 +78,12 @@ export default function App() {
           </section>
         </div>
       </main>
+      {walkthroughOpen && (
+        <Walkthrough
+          onSelectDate={setDecisionDate}
+          onClose={() => setWalkthroughOpen(false)}
+        />
+      )}
     </div>
   )
 }

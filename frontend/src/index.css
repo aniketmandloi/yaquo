@@ -85,6 +85,8 @@ select {
 .topbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   height: 56px;
   padding: 0 24px;
 }
@@ -448,6 +450,131 @@ th.num {
   text-align: center;
 }
 
+.spotlight {
+  outline: 2px solid var(--forecast);
+  outline-offset: 8px;
+  border-radius: 8px;
+  transition: outline-color 0.3s;
+}
+
+.walkthrough-start,
+.walkthrough-close,
+.walkthrough-controls button {
+  height: 34px;
+  padding: 0 14px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--control);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.walkthrough-start:hover,
+.walkthrough-close:hover,
+.walkthrough-controls button:hover:not(:disabled) {
+  background: var(--raised);
+}
+
+.walkthrough-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.walkthrough {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  width: min(380px, calc(100vw - 32px));
+  padding: 16px 18px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.14);
+}
+
+.walkthrough-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.walkthrough-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.walkthrough-close {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.walkthrough-progress {
+  height: 3px;
+  margin: 12px 0 14px;
+  overflow: hidden;
+  background: var(--rule);
+  border-radius: 2px;
+}
+
+.walkthrough-progress span {
+  display: block;
+  height: 100%;
+  background: var(--forecast);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.walkthrough h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.walkthrough-text {
+  margin: 0;
+  font-size: 14px;
+}
+
+.walkthrough-expect {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.walkthrough-expect span {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.walkthrough-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.walkthrough-controls .primary {
+  margin-left: auto;
+  color: var(--surface);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+
+.walkthrough-controls .primary:hover:not(:disabled) {
+  background: var(--ink);
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-progress span,
+  .spotlight {
+    transition: none;
+  }
+}
+
 .coverage {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -472,6 +599,13 @@ th.num {
 @media (max-width: 720px) {
   .topbar {
     padding: 0 16px;
+  }
+
+  .walkthrough {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
   }
 
   .sheet {
