@@ -5,7 +5,7 @@ A pilot for a UK utility's day-ahead procurement team. For each January 2026 pur
 | | |
 | --- | --- |
 | **Live app** | https://yaquo.onrender.com |
-| **Video** | _Not recorded yet. Add the unlisted YouTube link here._ |
+| **Video** | https://www.loom.com/share/e8efe4f6080f4cf1bac3db60ee65d6e3 |
 | **Specification** | [Issue #1](https://github.com/aniketmandloi/yaquo/issues/1) and [`docs/planning/wind-pilot-spec.md`](docs/planning/wind-pilot-spec.md) |
 | **Tickets** | [#2 forecast view](https://github.com/aniketmandloi/yaquo/issues/2), [#3 accuracy view](https://github.com/aniketmandloi/yaquo/issues/3), [#4 delivery](https://github.com/aniketmandloi/yaquo/issues/4) |
 | **Decisions** | [`docs/adr/`](docs/adr/) |
