@@ -1,6 +1,6 @@
 # 0006: Deploy the container image to one Heroku Basic dyno
 
-Status: Accepted, deployment pending
+Status: Superseded by [0008](0008-render-free-web-service.md). The Heroku card payment was declined.
 
 ## Context
 

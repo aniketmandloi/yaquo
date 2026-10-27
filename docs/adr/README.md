@@ -9,5 +9,6 @@ Each record states one decision, why it was made, and what follows from it. Reco
 | [0003](0003-match-at-identical-target-times.md) | Compare forecasts and actuals only at identical target times | Accepted |
 | [0004](0004-pool-errors-for-period-metrics.md) | Pool every matched error for January metrics | Accepted |
 | [0005](0005-one-origin-python-serves-frontend.md) | Serve the React build and API from one Python process | Accepted |
-| [0006](0006-heroku-basic-container.md) | Deploy to one Heroku Basic dyno | Accepted, deployment pending |
+| [0006](0006-heroku-basic-container.md) | Deploy to one Heroku Basic dyno | Superseded by 0008 |
+| [0008](0008-render-free-web-service.md) | Deploy to a Render free web service | Accepted, deployment pending |
 | [0007](0007-scope-wind-only.md) | Use only the two Elexon wind datasets | Accepted |
